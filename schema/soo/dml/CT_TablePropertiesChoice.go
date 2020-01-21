@@ -13,8 +13,8 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/unidoc/unioffice"
-	"github.com/unidoc/unioffice/schema/soo/ofc/sharedTypes"
+	"github.com/Preciselyco/unioffice"
+	"github.com/Preciselyco/unioffice/schema/soo/ofc/sharedTypes"
 )
 
 type CT_TablePropertiesChoice struct {

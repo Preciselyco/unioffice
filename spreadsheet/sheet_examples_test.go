@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/unidoc/unioffice/spreadsheet"
+	"github.com/Preciselyco/unioffice/spreadsheet"
 )
 
 func ExampleSheet_Cell() {

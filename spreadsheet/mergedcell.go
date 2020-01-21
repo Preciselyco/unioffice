@@ -10,7 +10,7 @@ package spreadsheet
 import (
 	"strings"
 
-	"github.com/unidoc/unioffice/schema/soo/sml"
+	"github.com/Preciselyco/unioffice/schema/soo/sml"
 )
 
 type MergedCell struct {

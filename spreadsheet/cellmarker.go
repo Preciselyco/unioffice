@@ -8,9 +8,9 @@
 package spreadsheet
 
 import (
-	"github.com/unidoc/unioffice"
-	"github.com/unidoc/unioffice/measurement"
-	sd "github.com/unidoc/unioffice/schema/soo/dml/spreadsheetDrawing"
+	"github.com/Preciselyco/unioffice"
+	"github.com/Preciselyco/unioffice/measurement"
+	sd "github.com/Preciselyco/unioffice/schema/soo/dml/spreadsheetDrawing"
 )
 
 // CellMarker represents a cell position

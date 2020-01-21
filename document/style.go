@@ -8,7 +8,7 @@
 package document
 
 import (
-	"github.com/unidoc/unioffice/schema/soo/wml"
+	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
 // Style is a style within the styles.xml file.

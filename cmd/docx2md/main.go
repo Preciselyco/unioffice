@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/unidoc/unioffice/document"
+	"github.com/Preciselyco/unioffice/document"
 )
 
 func main() {

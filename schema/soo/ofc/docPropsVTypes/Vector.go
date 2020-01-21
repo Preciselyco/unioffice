@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unidoc/unioffice"
+	"github.com/Preciselyco/unioffice"
 )
 
 type Vector struct {

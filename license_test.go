@@ -8,7 +8,7 @@
 package unioffice_test
 
 import "testing"
-import "github.com/unidoc/unioffice"
+import "github.com/Preciselyco/unioffice"
 
 func TestOpenSourceLicense(t *testing.T) {
 	unioffice.GetLicense()

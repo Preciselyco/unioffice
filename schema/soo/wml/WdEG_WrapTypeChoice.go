@@ -12,7 +12,7 @@ package wml
 import (
 	"encoding/xml"
 
-	"github.com/unidoc/unioffice"
+	"github.com/Preciselyco/unioffice"
 )
 
 type WdEG_WrapTypeChoice struct {

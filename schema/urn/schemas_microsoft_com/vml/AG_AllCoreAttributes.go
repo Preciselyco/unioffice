@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/unidoc/unioffice/schema/soo/ofc/sharedTypes"
+	"github.com/Preciselyco/unioffice/schema/soo/ofc/sharedTypes"
 )
 
 type AG_AllCoreAttributes struct {

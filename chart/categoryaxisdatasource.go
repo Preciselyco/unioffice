@@ -8,7 +8,7 @@
 package chart
 
 import (
-	crt "github.com/unidoc/unioffice/schema/soo/dml/chart"
+	crt "github.com/Preciselyco/unioffice/schema/soo/dml/chart"
 )
 
 // CategoryAxisDataSource specifies the data for an axis.  It's commonly used with

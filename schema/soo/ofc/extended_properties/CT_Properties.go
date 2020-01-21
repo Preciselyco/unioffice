@@ -12,7 +12,7 @@ package extended_properties
 import (
 	"encoding/xml"
 
-	"github.com/unidoc/unioffice"
+	"github.com/Preciselyco/unioffice"
 )
 
 type CT_Properties struct {

@@ -12,7 +12,7 @@ package chart
 import (
 	"encoding/xml"
 
-	"github.com/unidoc/unioffice"
+	"github.com/Preciselyco/unioffice"
 )
 
 type CT_DispUnitsChoice struct {

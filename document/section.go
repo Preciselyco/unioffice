@@ -10,9 +10,9 @@ package document
 import (
 	"log"
 
-	"github.com/unidoc/unioffice"
-	"github.com/unidoc/unioffice/measurement"
-	"github.com/unidoc/unioffice/schema/soo/wml"
+	"github.com/Preciselyco/unioffice"
+	"github.com/Preciselyco/unioffice/measurement"
+	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
 // Section is the beginning of a new section.

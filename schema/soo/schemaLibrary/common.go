@@ -9,7 +9,7 @@
 
 package schemaLibrary
 
-import "github.com/unidoc/unioffice"
+import "github.com/Preciselyco/unioffice"
 
 // init registers constructor functions for dynamically creating elements based off the XML namespace and name
 func init() {

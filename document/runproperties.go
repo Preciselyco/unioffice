@@ -8,11 +8,11 @@
 package document
 
 import (
-	"github.com/unidoc/unioffice"
-	"github.com/unidoc/unioffice/color"
-	"github.com/unidoc/unioffice/measurement"
-	"github.com/unidoc/unioffice/schema/soo/ofc/sharedTypes"
-	"github.com/unidoc/unioffice/schema/soo/wml"
+	"github.com/Preciselyco/unioffice"
+	"github.com/Preciselyco/unioffice/color"
+	"github.com/Preciselyco/unioffice/measurement"
+	"github.com/Preciselyco/unioffice/schema/soo/ofc/sharedTypes"
+	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
 // RunProperties controls run styling properties

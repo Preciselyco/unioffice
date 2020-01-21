@@ -4,7 +4,7 @@ package main
 import (
 	"log"
 
-	"github.com/unidoc/unioffice/spreadsheet"
+	"github.com/Preciselyco/unioffice/spreadsheet"
 )
 
 func main() {

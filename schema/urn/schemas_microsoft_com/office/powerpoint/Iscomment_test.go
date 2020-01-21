@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/unidoc/unioffice/schema/urn/schemas_microsoft_com/office/powerpoint"
+	"github.com/Preciselyco/unioffice/schema/urn/schemas_microsoft_com/office/powerpoint"
 )
 
 func TestIscommentConstructor(t *testing.T) {

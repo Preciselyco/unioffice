@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/unidoc/unioffice/algo"
+	"github.com/Preciselyco/unioffice/algo"
 )
 
 // Common filenames used in zip packages.

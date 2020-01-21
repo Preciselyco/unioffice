@@ -8,7 +8,7 @@
 package presentation
 
 import (
-	"github.com/unidoc/unioffice/schema/soo/pml"
+	"github.com/Preciselyco/unioffice/schema/soo/pml"
 )
 
 // SlideLayout

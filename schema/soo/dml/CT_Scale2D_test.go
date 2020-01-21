@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/unidoc/unioffice/schema/soo/dml"
+	"github.com/Preciselyco/unioffice/schema/soo/dml"
 )
 
 func TestCT_Scale2DConstructor(t *testing.T) {

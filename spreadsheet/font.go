@@ -8,8 +8,8 @@
 package spreadsheet
 
 import (
-	"github.com/unidoc/unioffice/color"
-	"github.com/unidoc/unioffice/schema/soo/sml"
+	"github.com/Preciselyco/unioffice/color"
+	"github.com/Preciselyco/unioffice/schema/soo/sml"
 )
 
 // Font allows editing fonts within a spreadsheet stylesheet.

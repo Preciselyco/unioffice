@@ -8,7 +8,7 @@
 package spreadsheet
 
 import (
-	"github.com/unidoc/unioffice/measurement"
+	"github.com/Preciselyco/unioffice/measurement"
 )
 
 // Anchor is the interface implemented by anchors. It's modeled after the most

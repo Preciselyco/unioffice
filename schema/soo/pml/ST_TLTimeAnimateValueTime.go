@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/unidoc/unioffice/schema/soo/dml"
+	"github.com/Preciselyco/unioffice/schema/soo/dml"
 )
 
 // ST_TLTimeAnimateValueTime is a union type

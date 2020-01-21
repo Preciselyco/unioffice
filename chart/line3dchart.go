@@ -8,7 +8,7 @@
 package chart
 
 import (
-	crt "github.com/unidoc/unioffice/schema/soo/dml/chart"
+	crt "github.com/Preciselyco/unioffice/schema/soo/dml/chart"
 )
 
 type Line3DChart struct {

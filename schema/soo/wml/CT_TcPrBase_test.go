@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/unidoc/unioffice/schema/soo/wml"
+	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
 func TestCT_TcPrBaseConstructor(t *testing.T) {

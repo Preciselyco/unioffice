@@ -10,8 +10,8 @@ package spreadsheet
 import (
 	"fmt"
 
-	"github.com/unidoc/unioffice/spreadsheet/formula"
-	"github.com/unidoc/unioffice/spreadsheet/reference"
+	"github.com/Preciselyco/unioffice/spreadsheet/formula"
+	"github.com/Preciselyco/unioffice/spreadsheet/reference"
 )
 
 func newEvalContext(s *Sheet) *evalContext {

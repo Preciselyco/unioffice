@@ -7,8 +7,8 @@
 
 package spreadsheet
 
-import "github.com/unidoc/unioffice/schema/soo/sml"
-import "github.com/unidoc/unioffice"
+import "github.com/Preciselyco/unioffice/schema/soo/sml"
+import "github.com/Preciselyco/unioffice"
 
 // DefinedName is a named range, formula, etc.
 type DefinedName struct {

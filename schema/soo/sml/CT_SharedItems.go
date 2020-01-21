@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unidoc/unioffice"
+	"github.com/Preciselyco/unioffice"
 )
 
 type CT_SharedItems struct {

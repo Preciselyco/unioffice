@@ -13,7 +13,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/unidoc/unioffice/schema/soo/dml"
+	"github.com/Preciselyco/unioffice/schema/soo/dml"
 )
 
 func TestAG_LockingConstructor(t *testing.T) {
