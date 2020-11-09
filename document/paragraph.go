@@ -86,6 +86,66 @@ func (p Paragraph) AddRun() Run {
 	return Run{p.d, r}
 }
 
+// AddRunTrackChange adds an insertion change to a paragraph.
+// Added by Precisely.
+func (p Paragraph) AddRunTrackChange(mode RunTrackChangeMode) RunTrackChange {
+	pc := wml.NewEG_PContent()
+	crc := wml.NewEG_ContentRunContent()
+	rle := wml.NewEG_RunLevelElts()
+	rtc := wml.NewCT_RunTrackChange()
+	switch mode {
+	case RunTrackChangeInsert:
+		rle.Ins = rtc
+	case RunTrackChangeDelete:
+		rle.Del = rtc
+	}
+	crc.EG_RunLevelElts = append(crc.EG_RunLevelElts, rle)
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, crc)
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	return RunTrackChange{p.d, rtc}
+}
+
+// AddCommentRangeStart adds a start marker for commented text to a paragraph.
+// Added by Precisely.
+func (p Paragraph) AddCommentRangeStart() MarkupRange {
+	pc := wml.NewEG_PContent()
+	crc := wml.NewEG_ContentRunContent()
+	rle := wml.NewEG_RunLevelElts()
+	rme := wml.NewEG_RangeMarkupElements()
+	mr := wml.NewCT_MarkupRange()
+	rme.CommentRangeStart = mr
+	rle.EG_RangeMarkupElements = append(rle.EG_RangeMarkupElements, rme)
+	crc.EG_RunLevelElts = append(crc.EG_RunLevelElts, rle)
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, crc)
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	return MarkupRange{p.d, mr}
+}
+
+// AddCommentRangeEnd adds an end marker for commented text to a paragraph.
+// Added by Precisely.
+func (p Paragraph) AddCommentRangeEnd() MarkupRange {
+	pc := wml.NewEG_PContent()
+	crc := wml.NewEG_ContentRunContent()
+	rle := wml.NewEG_RunLevelElts()
+	rme := wml.NewEG_RangeMarkupElements()
+	mr := wml.NewCT_MarkupRange()
+	rme.CommentRangeEnd = mr
+	rle.EG_RangeMarkupElements = append(rle.EG_RangeMarkupElements, rme)
+	crc.EG_RunLevelElts = append(crc.EG_RunLevelElts, rle)
+	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, crc)
+	p.x.EG_PContent = append(p.x.EG_PContent, pc)
+
+	return MarkupRange{p.d, mr}
+}
+
+// SetParagraphID sets the paragraph ID (32-bit hexadecimal string).
+// Added by Precisely.
+func (p Paragraph) SetParagraphID(id string) {
+	p.x.ParaIdAttr = &id
+}
+
 // Runs returns all of the runs in a paragraph.
 func (p Paragraph) Runs() []Run {
 	ret := []Run{}
@@ -227,6 +287,9 @@ func (p Paragraph) SetNumberingDefinition(nd NumberingDefinition) {
 		num.NumIdAttr = int64(len(p.d.Numbering.x.Num))
 		num.AbstractNumId = wml.NewCT_DecimalNumber()
 		num.AbstractNumId.ValAttr = nd.AbstractNumberID()
+		// Begin code added by Precisely
+		numID = num.NumIdAttr
+		// End code added by Precisely
 	}
 
 	lvl.ValAttr = numID

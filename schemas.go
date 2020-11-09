@@ -93,4 +93,8 @@ const (
 	// VML
 	VMLDrawingType        = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing"
 	VMLDrawingContentType = "application/vnd.openxmlformats-officedocument.vmlDrawing"
+
+	// Begin code added by Precisely
+	CommentsExtendedType = "http://schemas.microsoft.com/office/2011/relationships/commentsExtended"
+	// End code added by Precisely
 )

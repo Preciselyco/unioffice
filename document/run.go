@@ -66,6 +66,37 @@ func (r Run) AddText(s string) {
 	ic.T.Content = s
 }
 
+// AddDeletedText adds deleted text to a run.
+// Added by Precisely.
+func (r Run) AddDeletedText(s string) {
+	ric := wml.NewEG_RunInnerContent()
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+	ric.DelText = wml.NewCT_Text()
+	if unioffice.NeedsSpacePreserve(s) {
+		p := "preserve"
+		ric.DelText.SpaceAttr = &p
+	}
+	ric.DelText.Content = s
+}
+
+// AddCommentReference adds a comment anchor for commented text to a run.
+// Added by Precisely.
+func (r Run) AddCommentReference() Markup {
+	ric := wml.NewEG_RunInnerContent()
+	m := wml.NewCT_Markup()
+	ric.CommentReference = m
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+	return Markup{r.d, m}
+}
+
+// AddAnnotationReference adds a comment anchor for commented text to a run.
+// Added by Precisely.
+func (r Run) AddAnnotationReference() {
+	ric := wml.NewEG_RunInnerContent()
+	ric.AnnotationRef = wml.NewCT_Empty()
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+}
+
 func (r Run) newIC() *wml.EG_RunInnerContent {
 	ic := wml.NewEG_RunInnerContent()
 	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ic)

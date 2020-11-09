@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Preciselyco/unioffice/common"
 	"github.com/Preciselyco/unioffice/document"
@@ -24,6 +25,7 @@ func TestSimpleDoc(t *testing.T) {
 	para := doc.AddParagraph()
 	run := para.AddRun()
 	run.AddText("foo")
+	// _ = doc.SaveToFile("testdata/simple-1.docx") // Uncomment to update file
 	got := bytes.Buffer{}
 	if err := doc.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
@@ -81,6 +83,7 @@ func TestOpenHeaderFooter(t *testing.T) {
 		t.Errorf("error opening document: %s", err)
 	}
 
+	// _ = wb.SaveToFile("testdata/header-footer-multiple.docx") // Uncomment to update file
 	got := bytes.Buffer{}
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
@@ -270,24 +273,24 @@ func TestHeaderAndFooterImages(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to add image to doc: %s", err)
 	}
-	if dir1.RelID() != "rId4" {
-		t.Errorf("expected rId4 != %s", dir1.RelID())
+	if dir1.RelID() != "rId1" {
+		t.Errorf("expected rId1 != %s", dir1.RelID())
 	}
 
 	dir2, err := doc.AddImage(img2)
 	if err != nil {
 		t.Fatalf("unable to add image to doc: %s", err)
 	}
-	if dir2.RelID() != "rId5" {
-		t.Errorf("expected rId5 != %s", dir2.RelID())
+	if dir2.RelID() != "rId2" {
+		t.Errorf("expected rId2 != %s", dir2.RelID())
 	}
 
 	dir3, err := doc.AddImage(img3)
 	if err != nil {
 		t.Fatalf("unable to add image to doc: %s", err)
 	}
-	if dir3.RelID() != "rId6" {
-		t.Errorf("expected rId6 != %s", dir3.RelID())
+	if dir3.RelID() != "rId3" {
+		t.Errorf("expected rId3 != %s", dir3.RelID())
 	}
 
 	hdr := doc.AddHeader()
@@ -351,6 +354,7 @@ func TestIssue198(t *testing.T) {
 		t.Errorf("error reading %s: %s", fn, err)
 		return
 	}
+	// _ = doc.SaveToFile("testdata/"+fn+".golden") // Uncomment to update file
 	got := bytes.Buffer{}
 	doc.Save(&got)
 	testhelper.CompareGoldenZip(t, fn+".golden", got.Bytes())
@@ -384,4 +388,99 @@ func TestGetTables(t *testing.T) {
 	if len(tables) < 2 {
 		t.Errorf("nested table not enumerated. found %d, expected 2", len(tables))
 	}
+}
+
+// recodeDocx parses a docx byte slice, validates it and saves to a new byte slice.
+// Added by Precisely.
+func recodeDocx(t *testing.T, docx []byte) []byte {
+	doc, err := document.ReadFromBytes(docx)
+	if err != nil {
+		t.Errorf("failed to read document: %s", err)
+	}
+	if err := doc.Validate(); err != nil {
+		t.Errorf("failed to validate document: %s", err)
+	}
+	buf := bytes.Buffer{}
+	doc.Save(&buf)
+	return buf.Bytes()
+}
+
+// Added by Precisely
+func TestRunTrackChange(t *testing.T) {
+	doc := document.New()
+
+	para := doc.AddParagraph()
+	para.AddRun().AddText("Here is ")
+	rtc := para.AddRunTrackChange(document.RunTrackChangeDelete).SetAuthor("Gullman Rollger").SetDate(time.Date(2020, time.November, 9, 18, 19, 0, 0, time.UTC)).SetID(1)
+	rtc.AddRun().AddDeletedText("some")
+	rtc = para.AddRunTrackChange(document.RunTrackChangeInsert).SetAuthor("Gullman Rollger").SetDate(time.Date(2020, time.November, 9, 18, 19, 0, 0, time.UTC)).SetID(2)
+	rtc.AddRun().AddText("a little")
+	para.AddRun().AddText(" text.")
+
+	if err := doc.Validate(); err != nil {
+		t.Errorf("created an invalid document: %s", err)
+	}
+	// _ = doc.SaveToFile("testdata/runtrackchange.docx") // Uncomment to update file
+	got := bytes.Buffer{}
+	doc.Save(&got)
+	testhelper.CompareGoldenZip(t, "runtrackchange.docx", got.Bytes())
+	recoded := recodeDocx(t, got.Bytes())
+	testhelper.CompareGoldenZip(t, "runtrackchange.docx", recoded)
+}
+
+// Added by Precisely
+func TestComments(t *testing.T) {
+	doc := document.New()
+
+	para := doc.AddParagraph()
+	para.AddRun().AddText("Lorem ipsum ")
+	para.AddCommentRangeStart().SetID(0)
+	para.AddCommentRangeStart().SetID(1)
+	para.AddCommentRangeStart().SetID(2)
+	para.AddRun().AddText("dolor")
+	para.AddCommentRangeEnd().SetID(0)
+	para.AddRun().AddCommentReference().SetID(0)
+	para.AddCommentRangeEnd().SetID(1)
+	para.AddRun().AddCommentReference().SetID(1)
+	para.AddCommentRangeEnd().SetID(2)
+	para.AddRun().AddCommentReference().SetID(2)
+	para.AddRun().AddText(" sit amet")
+
+	com := doc.Comments.AddComment().SetID(0).SetAuthor("Gullman Rollger").SetInitials("GR").SetDate(time.Date(2020, time.November, 9, 18, 19, 0, 0, time.UTC))
+	para = com.AddParagraph()
+	para.AddRun().AddAnnotationReference()
+	para.AddRun().AddText("First paragraph of Gullman's comment")
+	para = com.AddParagraph()
+	para.SetParagraphID("11111111")
+	para.AddRun().AddText("Second paragraph of Gullman's comment")
+
+	com = doc.Comments.AddComment().SetID(1).SetAuthor("Jar-Jar Krutiainen").SetInitials("JK").SetDate(time.Date(2020, time.November, 11, 14, 57, 0, 0, time.UTC))
+	para = com.AddParagraph()
+	para.AddRun().AddAnnotationReference()
+	para.AddRun().AddText("First paragraph of Jar-Jar's comment")
+	para = com.AddParagraph()
+	para.SetParagraphID("22222222")
+	para.AddRun().AddText("Second paragraph of Jar-Jar's comment")
+
+	com = doc.Comments.AddComment().SetID(2).SetAuthor("Karls von Randolf").SetInitials("KR").SetDate(time.Date(2020, time.November, 13, 22, 21, 0, 0, time.UTC))
+	para = com.AddParagraph()
+	para.AddRun().AddAnnotationReference()
+	para.AddRun().AddText("First paragraph of Karls' comment")
+	para = com.AddParagraph()
+	para.SetParagraphID("33333333")
+	para.AddRun().AddText("Second paragraph of Karls' comment")
+
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("11111111")
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("22222222").SetParentParagraphID("11111111")
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("33333333").SetParentParagraphID("11111111")
+
+	if err := doc.Validate(); err != nil {
+		t.Errorf("created an invalid document: %s", err)
+	}
+	// _ = doc.SaveToFile("testdata/comments.docx") // Uncomment to update file
+	got := bytes.Buffer{}
+	doc.Save(&got)
+	testhelper.CompareGoldenZip(t, "comments.docx", got.Bytes())
+	recoded := recodeDocx(t, got.Bytes())
+	testhelper.CompareGoldenZip(t, "comments.docx", recoded)
 }

@@ -19,7 +19,9 @@ import (
 )
 
 func ParseStdlibTime(s string) (time.Time, error) {
-	return time.Time{}, nil
+	// Begin code changed by Precisely
+	return time.Parse(time.RFC3339, s)
+	// End code changed by Precisely
 }
 func ParseSliceST_Sqref(s string) (ST_Sqref, error) {
 	return ST_Sqref(strings.Fields(s)), nil
