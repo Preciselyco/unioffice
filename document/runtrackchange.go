@@ -1,5 +1,3 @@
-// Added by Precisely
-
 package document
 
 import (
@@ -7,11 +5,13 @@ import (
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
+// RunTrackChange is used for marking text as inserted or deleted.
 type RunTrackChange struct {
 	d *Document
 	x *wml.CT_RunTrackChange
 }
 
+// RunTrackChangeMode is used when inserting a RunTrackChange.
 type RunTrackChangeMode int
 const (
 	RunTrackChangeInsert RunTrackChangeMode = iota
@@ -23,7 +23,7 @@ func (rtc RunTrackChange) X() *wml.CT_RunTrackChange {
 	return rtc.x
 }
 
-// AddRun adds a run.
+// AddRun adds a run of inserted or deleted text.
 func (rtc RunTrackChange) AddRun() Run {
 	crc := wml.NewEG_ContentRunContent()
 	crc.R = wml.NewCT_R()

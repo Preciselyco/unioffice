@@ -1,5 +1,3 @@
-// Added by Precisely
-
 package document
 
 import (
@@ -8,7 +6,7 @@ import (
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
-// Comment is a comment contained in comments.xml.
+// Comment is a comment attached to a portion of a document.
 type Comment struct {
 	d *Document
 	x *wml.CT_Comment
@@ -38,13 +36,13 @@ func (comment Comment) AddParagraph() Paragraph {
 	return Paragraph{comment.d, p}
 }
 
-// SetAuthor sets the author's name.
+// SetAuthor sets the comment author's name.
 func (comment Comment) SetAuthor(author string) Comment {
 	comment.x.AuthorAttr = author
 	return comment
 }
 
-// SetDate sets the creation date.
+// SetDate sets the comment creation date.
 func (comment Comment) SetDate(date time.Time) Comment {
 	comment.x.DateAttr = &date
 	return comment
@@ -56,7 +54,7 @@ func (comment Comment) SetID(id int64) Comment {
 	return comment
 }
 
-// SetInitials sets the author's initials.
+// SetInitials sets the comment author's initials.
 func (comment Comment) SetInitials(initials string) Comment {
 	comment.x.InitialsAttr = &initials
 	return comment

@@ -67,7 +67,6 @@ func (r Run) AddText(s string) {
 }
 
 // AddDeletedText adds deleted text to a run.
-// Added by Precisely.
 func (r Run) AddDeletedText(s string) {
 	ric := wml.NewEG_RunInnerContent()
 	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
@@ -80,7 +79,6 @@ func (r Run) AddDeletedText(s string) {
 }
 
 // AddCommentReference adds a comment anchor for commented text to a run.
-// Added by Precisely.
 func (r Run) AddCommentReference() Markup {
 	ric := wml.NewEG_RunInnerContent()
 	m := wml.NewCT_Markup()
@@ -90,7 +88,6 @@ func (r Run) AddCommentReference() Markup {
 }
 
 // AddAnnotationReference adds a comment anchor for commented text to a run.
-// Added by Precisely.
 func (r Run) AddAnnotationReference() {
 	ric := wml.NewEG_RunInnerContent()
 	ric.AnnotationRef = wml.NewCT_Empty()

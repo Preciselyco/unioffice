@@ -1,12 +1,10 @@
-// Added by Precisely
-
 package document
 
 import (
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
-// Comments are the comments contained in comments.xml.
+// Comments contains the comments attached to a document.
 type Comments struct {
 	d *Document
 	x *wml.Comments

@@ -1,5 +1,4 @@
 // docx-tool is a command-line utility for debugging docx files and unioffice.
-// Added by Precisely.
 
 package main
 

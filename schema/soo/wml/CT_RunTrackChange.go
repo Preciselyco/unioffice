@@ -15,10 +15,8 @@ import (
 	"strconv"
 	"time"
 
-	// Begin code added by Precisely
 	"github.com/Preciselyco/unioffice"
 	"github.com/Preciselyco/unioffice/schema/soo/ofc/math"
-	// End code added by Precisely
 )
 
 type CT_RunTrackChange struct {
@@ -26,7 +24,7 @@ type CT_RunTrackChange struct {
 	DateAttr   *time.Time
 	// Annotation Identifier
 	IdAttr int64
-	// Added by Precisely
+	// Text contents of change
 	EG_ContentRunContent []*EG_ContentRunContent
 }
 
@@ -39,18 +37,14 @@ func (m *CT_RunTrackChange) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:author"},
 		Value: fmt.Sprintf("%v", m.AuthorAttr)})
 	if m.DateAttr != nil {
-		// Begin code changed by Precisely
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:date"}, Value: m.DateAttr.Format(time.RFC3339)})
-		// End code changed by Precisely
 	}
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:id"},
 		Value: fmt.Sprintf("%v", m.IdAttr)})
 	e.EncodeToken(start)
-	// Begin code added by Precisely
 	for _, c := range m.EG_ContentRunContent {
 		c.MarshalXML(e, xml.StartElement{})
 	}
-	// End code added by Precisely
 	e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
@@ -83,15 +77,12 @@ func (m *CT_RunTrackChange) UnmarshalXML(d *xml.Decoder, start xml.StartElement)
 			continue
 		}
 	}
-	// Begin code added by Precisely
 lCT_RunTrackChange:
-	// End code added by Precisely
 	for {
 		tok, err := d.Token()
 		if err != nil {
 			return fmt.Errorf("parsing CT_RunTrackChange: %s", err)
 		}
-		// Begin code added by Precisely
 		switch el := tok.(type) {
 		case xml.StartElement:
 			switch el.Name {
@@ -438,7 +429,6 @@ lCT_RunTrackChange:
 		case xml.EndElement:
 			break lCT_RunTrackChange
 		}
-		// End code added by Precisely
 	}
 	return nil
 }

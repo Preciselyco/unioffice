@@ -50,7 +50,6 @@ func (c ContentTypes) AddDefault(fileExtension string, contentType string) {
 }
 
 // SetOverride adds an override content type for a given path name if none exists for the path, or updates the content type.
-// Added by Precisely.
 func (c ContentTypes) SetOverride(path, contentType string) {
 	for _, or := range c.x.Override {
 		if or.PartNameAttr == path {

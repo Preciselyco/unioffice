@@ -131,17 +131,14 @@ func AbsoluteFilename(dt DocType, typ string, index int) string {
 
 	case CommentsType, CommentsTypeStrict, CommentsContentType:
 		switch dt {
-		// Begin code added by Precisely
 		case DocTypeDocument:
 			return "word/comments.xml"
-		// End code added by Precisely
 		case DocTypeSpreadsheet:
 			return fmt.Sprintf("xl/comments%d.xml", index)
 		default:
 			Log("unsupported type %s pair and %v", typ, dt)
 		}
 
-	// Begin code added by Precisely
 	case CommentsExtendedType:
 		switch dt {
 		case DocTypeDocument:
@@ -149,7 +146,6 @@ func AbsoluteFilename(dt DocType, typ string, index int) string {
 		default:
 			Log("unsupported type %s pair and %v", typ, dt)
 		}
-	// End code added by Precisely
 
 	case VMLDrawingType, VMLDrawingTypeStrict, VMLDrawingContentType:
 		switch dt {

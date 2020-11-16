@@ -1,5 +1,3 @@
-// Added by Precisely
-
 package document
 
 import (
@@ -7,7 +5,7 @@ import (
 	"github.com/Preciselyco/unioffice/schema/soo/ofc/sharedTypes"
 )
 
-// CommentExtended is an element in commentsExtended.xml.
+// CommentExtended contains relationship information for a Comment.
 type CommentExtended struct {
 	x *wml.CT_CommentEx
 }
@@ -24,13 +22,13 @@ func (ce CommentExtended) X() *wml.CT_CommentEx {
 	return ce.x
 }
 
-// SetParagraphID sets the paraId attribute.
+// SetParagraphID sets the ID of the last paragraph in the Comment.
 func (ce CommentExtended) SetParagraphID(id string) CommentExtended {
 	ce.x.ParaIdAttr = id
 	return ce
 }
 
-// SetParentParagraphID sets the paraIdParent attribute.
+// SetParentParagraphID sets the ID of the last paragraph in the parent Comment.
 func (ce CommentExtended) SetParentParagraphID(id string) CommentExtended {
 	ce.x.ParaIdParentAttr = &id
 	return ce

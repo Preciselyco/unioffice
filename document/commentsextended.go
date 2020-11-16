@@ -1,12 +1,10 @@
-// Added by Precisely
-
 package document
 
 import (
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
-// CommentsExtended reflects the information in commentsExtended.xml.
+// CommentsExtended contains relationship information for the comments attached to a document.
 type CommentsExtended struct {
 	x *wml.CommentsExtended
 }

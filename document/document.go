@@ -40,8 +40,8 @@ type Document struct {
 	Settings         Settings         // document settings
 	Numbering        Numbering        // numbering styles within the doucment
 	Styles           Styles           // styles that are use and can be used within the document
-	Comments         Comments         // Added by Precisely
-	CommentsExtended CommentsExtended // Added by Precisely
+	Comments         Comments         // comments used in document
+	CommentsExtended CommentsExtended // relationships between comments
 
 	headers []*wml.Hdr
 	hdrRels []common.Relationships
@@ -61,7 +61,6 @@ type Document struct {
 func New() *Document {
 	d := &Document{x: wml.NewDocument()}
 
-	// Begin code changed by Precisely
 	d.ContentTypes = common.NewContentTypes()
 	d.Rels = common.NewRelationships()
 	d.x.Body = wml.NewCT_Body()
@@ -76,7 +75,6 @@ func New() *Document {
 	d.Styles.InitializeDefault()
 	d.Comments = NewComments(d)
 	d.CommentsExtended = NewCommentsExtended()
-	// End code changed by Precisely
 
 	return d
 }
@@ -148,9 +146,7 @@ func (d *Document) Save(w io.Writer) error {
 		unioffice.Log("validation error in document: %s", err)
 	}
 
-	// Begin code added by Precisely
-	// Most of these have been moved from New() and changed from Add to Set.
-	// Make sure these content types and relationships exist, reading a document will clear them and some may be missing.
+	// Make sure these content types and relationships exist, reading a document will clear them.
 	d.ContentTypes.SetOverride("/word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
 	d.ContentTypes.SetOverride("/word/settings.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
 	d.ContentTypes.SetOverride("/word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
@@ -181,7 +177,6 @@ func (d *Document) Save(w io.Writer) error {
 	} else {
 		d.docRels.RemoveRelationship("commentsExtended.xml")
 	}
-	// End code added by Precisely
 
 	dt := unioffice.DocTypeDocument
 
@@ -226,7 +221,6 @@ func (d *Document) Save(w io.Writer) error {
 		return err
 	}
 
-	// Begin code added by Precisely
 	if d.Comments.NonEmpty() {
 		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CommentsType, d.Comments.X()); err != nil {
 			return err
@@ -237,7 +231,6 @@ func (d *Document) Save(w io.Writer) error {
 			return err
 		}
 	}
-	// End code added by Precisely
 
 	if d.webSettings != nil {
 		if err := zippkg.MarshalXMLByType(z, dt, unioffice.WebSettingsType, d.webSettings); err != nil {
@@ -536,7 +529,6 @@ func OpenTemplate(filename string) (*Document, error) {
 }
 
 // ReadFromBytes reads a document from a byte slice.
-// Added by Precisely.
 func ReadFromBytes(docx []byte) (*Document, error) {
 	return Read(bytes.NewReader(docx), int64(len(docx)))
 }
@@ -864,17 +856,15 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 			rel.TargetAttr = rel.TargetAttr[0:len(rel.TargetAttr)-len(newExt)] + ext
 		}
 
-	// Begin code added by Precisely
 	case unioffice.CommentsType, unioffice.CommentsTypeStrict:
 		decMap.AddTarget(target, d.Comments.X(), typ, 0)
 		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
 	case unioffice.CommentsExtendedType:
 		decMap.AddTarget(target, d.CommentsExtended.X(), typ, 0)
 		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
-	// End code added by Precisely
 
 	default:
-		// Commented out by Precisely
 		// unioffice.Log("unsupported relationship type: %s tgt: %s", typ, target)
 	}
 	return nil

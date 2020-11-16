@@ -28,7 +28,7 @@ type CT_P struct {
 	RsidPAttr *string
 	// Default Revision Identifier for Runs
 	RsidRDefaultAttr *string
-	// Added by Precisely
+	// Paragraph ID (8 hexadecimal digits), added in Word 2012
 	ParaIdAttr *string
 	// Paragraph Properties
 	PPr         *CT_PPr
@@ -61,11 +61,9 @@ func (m *CT_P) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:rsidRDefault"},
 			Value: fmt.Sprintf("%v", *m.RsidRDefaultAttr)})
 	}
-	// Begin code added by Precisely
 	if m.ParaIdAttr != nil {
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w10:paraId"}, Value: *m.ParaIdAttr})
 	}
-	// End code added by Precisely
 	e.EncodeToken(start)
 	if m.PPr != nil {
 		sepPr := xml.StartElement{Name: xml.Name{Local: "w:pPr"}}
@@ -123,12 +121,10 @@ func (m *CT_P) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 			m.RsidRPrAttr = &parsed
 			continue
 		}
-		// Begin code added by Precisely
 		if attr.Name.Local == "paraId" {
 			m.ParaIdAttr = &attr.Value
 			continue
 		}
-		// End code added by Precisely
 	}
 lCT_P:
 	for {

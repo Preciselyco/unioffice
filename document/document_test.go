@@ -391,7 +391,6 @@ func TestGetTables(t *testing.T) {
 }
 
 // recodeDocx parses a docx byte slice, validates it and saves to a new byte slice.
-// Added by Precisely.
 func recodeDocx(t *testing.T, docx []byte) []byte {
 	doc, err := document.ReadFromBytes(docx)
 	if err != nil {
@@ -405,7 +404,6 @@ func recodeDocx(t *testing.T, docx []byte) []byte {
 	return buf.Bytes()
 }
 
-// Added by Precisely
 func TestRunTrackChange(t *testing.T) {
 	doc := document.New()
 
@@ -428,7 +426,6 @@ func TestRunTrackChange(t *testing.T) {
 	testhelper.CompareGoldenZip(t, "runtrackchange.docx", recoded)
 }
 
-// Added by Precisely
 func TestComments(t *testing.T) {
 	doc := document.New()
 

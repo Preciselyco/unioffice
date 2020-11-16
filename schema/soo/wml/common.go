@@ -72,9 +72,7 @@ func ParseUnionST_HexColor(s string) (ST_HexColor, error) {
 }
 
 func ParseStdlibTime(s string) (time.Time, error) {
-	// Begin code changed by Precisely
 	return time.Parse(time.RFC3339, s)
-	// End code changed by Precisely
 }
 
 func ParseUnionST_DecimalNumberOrPercent(s string) (ST_DecimalNumberOrPercent, error) {

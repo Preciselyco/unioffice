@@ -67,7 +67,6 @@ func (r Relationships) AddAutoRelationship(dt unioffice.DocType, src string, idx
 }
 
 // SetRelationship adds a relationship if none exists for the target file, or sets the type if it exists.
-// Added by Precisely.
 func (r Relationships) SetRelationship(target, ctype string) Relationship {
 	for _, rel := range r.x.Relationship {
 		if rel.TargetAttr == target {
@@ -115,8 +114,7 @@ func (r Relationships) Remove(rel Relationship) bool {
 	return false
 }
 
-// Remove removes an existing relationship by target.
-// Added by Precisely.
+// Remove removes an existing relationship by target and returns true, or returns false if not found.
 func (r Relationships) RemoveRelationship(target string) bool {
 	for i, ir := range r.x.Relationship {
 		if ir.TargetAttr == target {

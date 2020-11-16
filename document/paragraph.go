@@ -87,7 +87,6 @@ func (p Paragraph) AddRun() Run {
 }
 
 // AddRunTrackChange adds an insertion change to a paragraph.
-// Added by Precisely.
 func (p Paragraph) AddRunTrackChange(mode RunTrackChangeMode) RunTrackChange {
 	pc := wml.NewEG_PContent()
 	crc := wml.NewEG_ContentRunContent()
@@ -107,7 +106,6 @@ func (p Paragraph) AddRunTrackChange(mode RunTrackChangeMode) RunTrackChange {
 }
 
 // AddCommentRangeStart adds a start marker for commented text to a paragraph.
-// Added by Precisely.
 func (p Paragraph) AddCommentRangeStart() MarkupRange {
 	pc := wml.NewEG_PContent()
 	crc := wml.NewEG_ContentRunContent()
@@ -124,7 +122,6 @@ func (p Paragraph) AddCommentRangeStart() MarkupRange {
 }
 
 // AddCommentRangeEnd adds an end marker for commented text to a paragraph.
-// Added by Precisely.
 func (p Paragraph) AddCommentRangeEnd() MarkupRange {
 	pc := wml.NewEG_PContent()
 	crc := wml.NewEG_ContentRunContent()
@@ -140,8 +137,7 @@ func (p Paragraph) AddCommentRangeEnd() MarkupRange {
 	return MarkupRange{p.d, mr}
 }
 
-// SetParagraphID sets the paragraph ID (32-bit hexadecimal string).
-// Added by Precisely.
+// SetParagraphID sets the paragraph ID (8 hexadecimal digits).
 func (p Paragraph) SetParagraphID(id string) {
 	p.x.ParaIdAttr = &id
 }
@@ -287,9 +283,7 @@ func (p Paragraph) SetNumberingDefinition(nd NumberingDefinition) {
 		num.NumIdAttr = int64(len(p.d.Numbering.x.Num))
 		num.AbstractNumId = wml.NewCT_DecimalNumber()
 		num.AbstractNumId.ValAttr = nd.AbstractNumberID()
-		// Begin code added by Precisely
 		numID = num.NumIdAttr
-		// End code added by Precisely
 	}
 
 	lvl.ValAttr = numID
