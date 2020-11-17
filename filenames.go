@@ -131,8 +131,18 @@ func AbsoluteFilename(dt DocType, typ string, index int) string {
 
 	case CommentsType, CommentsTypeStrict, CommentsContentType:
 		switch dt {
+		case DocTypeDocument:
+			return "word/comments.xml"
 		case DocTypeSpreadsheet:
 			return fmt.Sprintf("xl/comments%d.xml", index)
+		default:
+			Log("unsupported type %s pair and %v", typ, dt)
+		}
+
+	case CommentsExtendedType:
+		switch dt {
+		case DocTypeDocument:
+			return "word/commentsExtended.xml"
 		default:
 			Log("unsupported type %s pair and %v", typ, dt)
 		}

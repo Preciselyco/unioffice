@@ -227,8 +227,7 @@ func ParseUnionST_TextFontScalePercentOrPercentString(s string) (ST_TextFontScal
 }
 
 func ParseStdlibTime(s string) (time.Time, error) {
-	// TODO: implement this
-	return time.Time{}, nil
+	return time.Parse(time.RFC3339, s)
 }
 
 type Any interface {

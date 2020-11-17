@@ -9,6 +9,7 @@ package document
 
 import (
 	"archive/zip"
+	"bytes"
 	"errors"
 	"fmt"
 	"image"
@@ -36,9 +37,11 @@ type Document struct {
 	common.DocBase
 	x *wml.Document
 
-	Settings  Settings  // document settings
-	Numbering Numbering // numbering styles within the doucment
-	Styles    Styles    // styles that are use and can be used within the document
+	Settings         Settings         // document settings
+	Numbering        Numbering        // numbering styles within the doucment
+	Styles           Styles           // styles that are use and can be used within the document
+	Comments         Comments         // comments used in document
+	CommentsExtended CommentsExtended // relationships between comments
 
 	headers []*wml.Hdr
 	hdrRels []common.Relationships
@@ -57,36 +60,22 @@ type Document struct {
 // New constructs an empty document that content can be added to.
 func New() *Document {
 	d := &Document{x: wml.NewDocument()}
+
 	d.ContentTypes = common.NewContentTypes()
+	d.Rels = common.NewRelationships()
 	d.x.Body = wml.NewCT_Body()
 	d.x.ConformanceAttr = st.ST_ConformanceClassTransitional
 	d.docRels = common.NewRelationships()
-
 	d.AppProperties = common.NewAppProperties()
 	d.CoreProperties = common.NewCoreProperties()
-
-	d.ContentTypes.AddOverride("/word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
-
 	d.Settings = NewSettings()
-	d.docRels.AddRelationship("settings.xml", unioffice.SettingsType)
-	d.ContentTypes.AddOverride("/word/settings.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
-
-	d.Rels = common.NewRelationships()
-	d.Rels.AddRelationship(unioffice.RelativeFilename(unioffice.DocTypeDocument, "", unioffice.CorePropertiesType, 0), unioffice.CorePropertiesType)
-	d.Rels.AddRelationship("docProps/app.xml", unioffice.ExtendedPropertiesType)
-	d.Rels.AddRelationship("word/document.xml", unioffice.OfficeDocumentType)
-
 	d.Numbering = NewNumbering()
 	d.Numbering.InitializeDefault()
-	d.ContentTypes.AddOverride("/word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
-	d.docRels.AddRelationship("numbering.xml", unioffice.NumberingType)
-
 	d.Styles = NewStyles()
 	d.Styles.InitializeDefault()
-	d.ContentTypes.AddOverride("/word/styles.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")
-	d.docRels.AddRelationship("styles.xml", unioffice.StylesType)
+	d.Comments = NewComments(d)
+	d.CommentsExtended = NewCommentsExtended()
 
-	d.x.Body = wml.NewCT_Body()
 	return d
 }
 
@@ -156,6 +145,39 @@ func (d *Document) Save(w io.Writer) error {
 	if err := d.x.Validate(); err != nil {
 		unioffice.Log("validation error in document: %s", err)
 	}
+
+	// Make sure these content types and relationships exist, reading a document will clear them.
+	d.ContentTypes.SetOverride("/word/document.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")
+	d.ContentTypes.SetOverride("/word/settings.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
+	d.ContentTypes.SetOverride("/word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
+	d.ContentTypes.SetOverride("/word/styles.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")
+	if d.Comments.NonEmpty() {
+		d.ContentTypes.SetOverride("/word/comments.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml")
+	} else {
+		d.ContentTypes.RemoveOverride("/word/comments.xml")
+	}
+	if d.CommentsExtended.NonEmpty() {
+		d.ContentTypes.SetOverride("/word/commentsExtended.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml")
+	} else {
+		d.ContentTypes.RemoveOverride("/word/commentsExtended.xml")
+	}
+	d.Rels.SetRelationship(unioffice.RelativeFilename(unioffice.DocTypeDocument, "", unioffice.CorePropertiesType, 0), unioffice.CorePropertiesType)
+	d.Rels.SetRelationship("docProps/app.xml", unioffice.ExtendedPropertiesType)
+	d.Rels.SetRelationship("word/document.xml", unioffice.OfficeDocumentType)
+	d.docRels.SetRelationship("settings.xml", unioffice.SettingsType)
+	d.docRels.SetRelationship("numbering.xml", unioffice.NumberingType)
+	d.docRels.SetRelationship("styles.xml", unioffice.StylesType)
+	if d.Comments.NonEmpty() {
+		d.docRels.SetRelationship("comments.xml", unioffice.CommentsType)
+	} else {
+		d.docRels.RemoveRelationship("comments.xml")
+	}
+	if d.CommentsExtended.NonEmpty() {
+		d.docRels.SetRelationship("commentsExtended.xml", unioffice.CommentsExtendedType)
+	} else {
+		d.docRels.RemoveRelationship("commentsExtended.xml")
+	}
+
 	dt := unioffice.DocTypeDocument
 
 	z := zip.NewWriter(w)
@@ -181,6 +203,7 @@ func (d *Document) Save(w io.Writer) error {
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.SettingsType, d.Settings.X()); err != nil {
 		return err
 	}
+
 	documentFn := unioffice.AbsoluteFilename(dt, unioffice.OfficeDocumentType, 0)
 	if err := zippkg.MarshalXML(z, documentFn, d.x); err != nil {
 		return err
@@ -196,6 +219,17 @@ func (d *Document) Save(w io.Writer) error {
 	}
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.StylesType, d.Styles.X()); err != nil {
 		return err
+	}
+
+	if d.Comments.NonEmpty() {
+		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CommentsType, d.Comments.X()); err != nil {
+			return err
+		}
+	}
+	if d.CommentsExtended.NonEmpty() {
+		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CommentsExtendedType, d.CommentsExtended.X()); err != nil {
+			return err
+		}
 	}
 
 	if d.webSettings != nil {
@@ -260,6 +294,7 @@ func (d *Document) Save(w io.Writer) error {
 	if err := zippkg.MarshalXML(z, unioffice.ContentTypesFilename, d.ContentTypes.X()); err != nil {
 		return err
 	}
+
 	if err := d.WriteExtraFiles(z); err != nil {
 		return err
 	}
@@ -491,6 +526,11 @@ func OpenTemplate(filename string) (*Document, error) {
 	}
 	d.x.Body = wml.NewCT_Body()
 	return d, nil
+}
+
+// ReadFromBytes reads a document from a byte slice.
+func ReadFromBytes(docx []byte) (*Document, error) {
+	return Read(bytes.NewReader(docx), int64(len(docx)))
 }
 
 // Read reads a document from an io.Reader.
@@ -816,8 +856,16 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 			rel.TargetAttr = rel.TargetAttr[0:len(rel.TargetAttr)-len(newExt)] + ext
 		}
 
+	case unioffice.CommentsType, unioffice.CommentsTypeStrict:
+		decMap.AddTarget(target, d.Comments.X(), typ, 0)
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
+	case unioffice.CommentsExtendedType:
+		decMap.AddTarget(target, d.CommentsExtended.X(), typ, 0)
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
 	default:
-		unioffice.Log("unsupported relationship type: %s tgt: %s", typ, target)
+		// unioffice.Log("unsupported relationship type: %s tgt: %s", typ, target)
 	}
 	return nil
 }

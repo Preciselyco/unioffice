@@ -19,7 +19,7 @@ import (
 )
 
 func ParseStdlibTime(s string) (time.Time, error) {
-	return time.Time{}, nil
+	return time.Parse(time.RFC3339, s)
 }
 func ParseSliceST_Sqref(s string) (ST_Sqref, error) {
 	return ST_Sqref(strings.Fields(s)), nil

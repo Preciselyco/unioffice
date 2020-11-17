@@ -36,6 +36,7 @@ func (m *Comments) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:w"}, Value: "http://schemas.openxmlformats.org/wordprocessingml/2006/main"})
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:wp"}, Value: "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"})
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:xml"}, Value: "http://www.w3.org/XML/1998/namespace"})
+	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:w10"}, Value: "http://schemas.microsoft.com/office/word/2010/wordml"}) // This is necessary for paragraph ID
 	start.Name.Local = "w:comments"
 	return m.CT_Comments.MarshalXML(e, start)
 }

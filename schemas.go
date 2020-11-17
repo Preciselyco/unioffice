@@ -93,4 +93,7 @@ const (
 	// VML
 	VMLDrawingType        = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing"
 	VMLDrawingContentType = "application/vnd.openxmlformats-officedocument.vmlDrawing"
+
+	// MS Word additions
+	CommentsExtendedType = "http://schemas.microsoft.com/office/2011/relationships/commentsExtended"
 )

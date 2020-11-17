@@ -66,6 +66,17 @@ func (r Relationships) AddAutoRelationship(dt unioffice.DocType, src string, idx
 	return r.AddRelationship(unioffice.RelativeFilename(dt, src, ctype, idx), ctype)
 }
 
+// SetRelationship adds a relationship if none exists for the target file, or sets the type if it exists.
+func (r Relationships) SetRelationship(target, ctype string) Relationship {
+	for _, rel := range r.x.Relationship {
+		if rel.TargetAttr == target {
+			rel.TypeAttr = ctype
+			return Relationship{rel}
+		}
+	}
+	return r.AddRelationship(target, ctype)
+}
+
 // AddRelationship adds a relationship.
 func (r Relationships) AddRelationship(target, ctype string) Relationship {
 	if !strings.HasPrefix(ctype, "http://") {
@@ -95,6 +106,18 @@ func (r Relationships) AddRelationship(target, ctype string) Relationship {
 func (r Relationships) Remove(rel Relationship) bool {
 	for i, ir := range r.x.Relationship {
 		if ir == rel.x {
+			copy(r.x.Relationship[i:], r.x.Relationship[i+1:])
+			r.x.Relationship = r.x.Relationship[0 : len(r.x.Relationship)-1]
+			return true
+		}
+	}
+	return false
+}
+
+// Remove removes an existing relationship by target and returns true, or returns false if not found.
+func (r Relationships) RemoveRelationship(target string) bool {
+	for i, ir := range r.x.Relationship {
+		if ir.TargetAttr == target {
 			copy(r.x.Relationship[i:], r.x.Relationship[i+1:])
 			r.x.Relationship = r.x.Relationship[0 : len(r.x.Relationship)-1]
 			return true
