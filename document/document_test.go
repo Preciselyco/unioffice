@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Preciselyco/unioffice"
 	"github.com/Preciselyco/unioffice/common"
 	"github.com/Preciselyco/unioffice/document"
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
@@ -449,6 +450,8 @@ func TestComments(t *testing.T) {
 	para.AddRun().AddText("First paragraph of Gullman's comment")
 	para = com.AddParagraph()
 	para.SetParagraphID("11111111")
+	para.X().RsidPAttr = unioffice.String("ABABABAB")        // Test that this is kept separated from ParaIdAttr
+	para.X().RsidRDefaultAttr = unioffice.String("CDCDCDCD") // Test that this is kept separated from ParaIdAttr
 	para.AddRun().AddText("Second paragraph of Gullman's comment")
 
 	com = doc.Comments.AddComment().SetID(1).SetAuthor("Jar-Jar Krutiainen").SetInitials("JK").SetDate(time.Date(2020, time.November, 11, 14, 57, 0, 0, time.UTC))
