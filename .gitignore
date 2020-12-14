@@ -7,6 +7,7 @@
 coverage*
 **/.DS_Store
 **/main
+cmd/docx-tool/docx-tool
 
 # Test binary, build with `go test -c`
 *.test

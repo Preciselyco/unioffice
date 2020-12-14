@@ -41,6 +41,9 @@ func NewCT_P() *CT_P {
 }
 
 func (m *CT_P) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if m.ParaIdAttr != nil {
+		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w10:paraId"}, Value: *m.ParaIdAttr})
+	}
 	if m.RsidRPrAttr != nil {
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:rsidRPr"},
 			Value: fmt.Sprintf("%v", *m.RsidRPrAttr)})
@@ -60,9 +63,6 @@ func (m *CT_P) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if m.RsidRDefaultAttr != nil {
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w:rsidRDefault"},
 			Value: fmt.Sprintf("%v", *m.RsidRDefaultAttr)})
-	}
-	if m.ParaIdAttr != nil {
-		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w10:paraId"}, Value: *m.ParaIdAttr})
 	}
 	e.EncodeToken(start)
 	if m.PPr != nil {
@@ -122,7 +122,9 @@ func (m *CT_P) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 			continue
 		}
 		if attr.Name.Local == "paraId" {
-			m.ParaIdAttr = &attr.Value
+			// Make a local copy
+			value := attr.Value
+			m.ParaIdAttr = &value
 			continue
 		}
 	}
