@@ -41,7 +41,9 @@ func (m *CT_CommentEx) UnmarshalXML(d *xml.Decoder, start xml.StartElement) erro
 		case xml.Name{Space: "http://schemas.microsoft.com/office/word/2012/wordml", Local: "paraId"}:
 			m.ParaIdAttr = attr.Value
 		case xml.Name{Space: "http://schemas.microsoft.com/office/word/2012/wordml", Local: "paraIdParent"}:
-			m.ParaIdParentAttr = &attr.Value
+			// Make a local copy
+			value := attr.Value
+			m.ParaIdParentAttr = &value
 		case xml.Name{Space: "http://schemas.microsoft.com/office/word/2012/wordml", Local: "done"}:
 			parsed, err := ParseUnionST_OnOff(attr.Value)
 			if err != nil {

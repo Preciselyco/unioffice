@@ -470,9 +470,10 @@ func TestComments(t *testing.T) {
 	para.SetParagraphID("33333333")
 	para.AddRun().AddText("Second paragraph of Karls' comment")
 
-	doc.CommentsExtended.AddCommentExtended().SetParagraphID("11111111")
-	doc.CommentsExtended.AddCommentExtended().SetParagraphID("22222222").SetParentParagraphID("11111111")
-	doc.CommentsExtended.AddCommentExtended().SetParagraphID("33333333").SetParentParagraphID("11111111")
+	// Call SetDone() to test that the "paraIdParent" attribute is kept separate from "done"
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("11111111").SetDone(false)
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("22222222").SetParentParagraphID("11111111").SetDone(false)
+	doc.CommentsExtended.AddCommentExtended().SetParagraphID("33333333").SetParentParagraphID("11111111").SetDone(false)
 
 	if err := doc.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
