@@ -36,6 +36,15 @@ func (h Header) AddParagraph() Paragraph {
 	return Paragraph{h.d, p}
 }
 
+// AddTable adds a table to the header.
+func (h Header) AddTable() Table {
+	cbc := wml.NewEG_ContentBlockContent()
+	h.x.EG_ContentBlockContent = append(h.x.EG_ContentBlockContent, cbc)
+	tbl := wml.NewCT_Tbl()
+	cbc.Tbl = append(cbc.Tbl, tbl)
+	return Table{h.d, tbl}
+}
+
 // Index returns the index of the header within the document.  This is used to
 // form its zip packaged filename as well as to match it with its relationship
 // ID.

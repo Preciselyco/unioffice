@@ -36,6 +36,15 @@ func (f Footer) AddParagraph() Paragraph {
 	return Paragraph{f.d, p}
 }
 
+// AddTable adds a table to the footer.
+func (f Footer) AddTable() Table {
+	cbc := wml.NewEG_ContentBlockContent()
+	f.x.EG_ContentBlockContent = append(f.x.EG_ContentBlockContent, cbc)
+	tbl := wml.NewCT_Tbl()
+	cbc.Tbl = append(cbc.Tbl, tbl)
+	return Table{f.d, tbl}
+}
+
 // Index returns the index of the footer within the document.  This is used to
 // form its zip packaged filename as well as to match it with its relationship
 // ID.
