@@ -29,6 +29,8 @@ const ST_CnfPattern = `[01]*`
 
 var ST_CnfPatternRe = regexp.MustCompile(ST_CnfPattern)
 
+const ISO8601ExtendedFormat = "2006-01-02T15:04:05"
+
 func ParseUnionST_SignedTwipsMeasure(s string) (ST_SignedTwipsMeasure, error) {
 	r := ST_SignedTwipsMeasure{}
 	if sharedTypes.ST_UniversalMeasurePatternRe.MatchString(s) {
@@ -72,7 +74,18 @@ func ParseUnionST_HexColor(s string) (ST_HexColor, error) {
 }
 
 func ParseStdlibTime(s string) (time.Time, error) {
-	return time.Parse(time.RFC3339, s)
+	result, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		// Office 365 can decide to skip the timezone so fall back to a format without a time zone
+		result, err2 := time.Parse(ISO8601ExtendedFormat, s)
+		if err2 != nil {
+			// If the fallback doesn't work out return the original error because we really
+			// want that format to be used
+			return result, err
+		}
+		return result, nil
+	}
+	return result, err
 }
 
 func ParseUnionST_DecimalNumberOrPercent(s string) (ST_DecimalNumberOrPercent, error) {
