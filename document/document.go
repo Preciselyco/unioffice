@@ -22,12 +22,11 @@ import (
 
 	"github.com/Preciselyco/unioffice"
 	"github.com/Preciselyco/unioffice/common"
-	"github.com/Preciselyco/unioffice/zippkg"
-
 	"github.com/Preciselyco/unioffice/schema/soo/dml"
 	st "github.com/Preciselyco/unioffice/schema/soo/ofc/sharedTypes"
 	"github.com/Preciselyco/unioffice/schema/soo/pkg/relationships"
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
+	"github.com/Preciselyco/unioffice/zippkg"
 )
 
 // Document is a text document that can be written out in the OOXML .docx
@@ -602,6 +601,7 @@ func (d *Document) validateBookmarks() error {
 	}
 	return nil
 }
+
 func (d *Document) validateTableCells() error {
 	for _, elt := range d.x.Body.EG_BlockLevelElts {
 		for _, c := range elt.EG_ContentBlockContent {
@@ -943,7 +943,7 @@ func bookmarks(bc *wml.EG_ContentBlockContent) []Bookmark {
 				for _, re := range ecr.EG_RunLevelElts {
 					for _, rm := range re.EG_RangeMarkupElements {
 						if rm.BookmarkStart != nil {
-							ret = append(ret, Bookmark{rm.BookmarkStart})
+							ret = append(ret, Bookmark{x: rm.BookmarkStart})
 						}
 					}
 				}
@@ -954,7 +954,7 @@ func bookmarks(bc *wml.EG_ContentBlockContent) []Bookmark {
 	for _, re := range bc.EG_RunLevelElts {
 		for _, rm := range re.EG_RangeMarkupElements {
 			if rm.BookmarkStart != nil {
-				ret = append(ret, Bookmark{rm.BookmarkStart})
+				ret = append(ret, Bookmark{x: rm.BookmarkStart})
 			}
 		}
 	}
