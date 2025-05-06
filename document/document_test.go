@@ -9,7 +9,6 @@ package document_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -60,7 +59,7 @@ func TestOpenStrict(t *testing.T) {
 		t.Errorf("created an invalid document: %s", err)
 	}
 	strict.Save(&gotStrict)
-	ioutil.WriteFile("testdata/non-strict.docx", gotStrict.Bytes(), 0644)
+	os.WriteFile("testdata/non-strict.docx", gotStrict.Bytes(), 0644)
 
 	// run test assuming that the doc is a valid non-strict doc
 	nonStrict, err := document.Open("testdata/non-strict.docx")
@@ -215,8 +214,8 @@ func TestInsertBookmarks(t *testing.T) {
 	}
 
 	p := doc.AddParagraph()
-	p.AddBookmark("bookmark1")
-	p.AddBookmark("bookmark2")
+	p.AddBookmark(1, "bookmark1")
+	p.AddBookmark(2, "bookmark2")
 
 	if len(doc.Bookmarks()) != 2 {
 		t.Errorf("expected 2 bookmarks, got %d", len(doc.Bookmarks()))
@@ -230,8 +229,8 @@ func TestDuplicateBookmarks(t *testing.T) {
 	}
 
 	p := doc.AddParagraph()
-	p.AddBookmark("bookmark1")
-	p.AddBookmark("bookmark1")
+	p.AddBookmark(1, "bookmark1")
+	p.AddBookmark(1, "bookmark1")
 
 	if len(doc.Bookmarks()) != 2 {
 		t.Errorf("expected 2 bookmarks, got %d", len(doc.Bookmarks()))

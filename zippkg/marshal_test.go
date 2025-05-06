@@ -10,7 +10,7 @@ package zippkg_test
 import (
 	"archive/zip"
 	"bytes"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/Preciselyco/unioffice/zippkg"
@@ -48,7 +48,7 @@ func TestMarshal(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected no error, got %s", err)
 	}
-	out, err := ioutil.ReadAll(rc)
+	out, err := io.ReadAll(rc)
 	if err != nil {
 		t.Errorf("expected no error, got %s", err)
 	}
