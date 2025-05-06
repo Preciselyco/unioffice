@@ -50,3 +50,11 @@ func (s Settings) SetUpdateFieldsOnOpen(b bool) {
 func (s Settings) RemoveMailMerge() {
 	s.x.MailMerge = nil
 }
+
+func (s Settings) SetTrackChanges(b bool) {
+	if b {
+		s.x.TrackRevisions = wml.NewCT_OnOff()
+	} else {
+		s.x.TrackRevisions = nil
+	}
+}
