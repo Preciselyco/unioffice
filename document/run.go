@@ -135,6 +135,38 @@ func (r Run) AddFieldWithFormatting(code string, fmt string, isDirty bool) {
 	ic.FldChar.FldCharTypeAttr = wml.ST_FldCharTypeEnd
 }
 
+// AddFieldWithFormattingAndContent adds a field (automatically computed text) to the
+// document with field specifc formatting and content.
+func (r Run) AddFieldWithFormattingAndContent(code, fmt, content string, isDirty bool) {
+	ic := r.newIC()
+	ic.FldChar = wml.NewCT_FldChar()
+	ic.FldChar.FldCharTypeAttr = wml.ST_FldCharTypeBegin
+	if isDirty {
+		ic.FldChar.DirtyAttr = &sharedTypes.ST_OnOff{}
+		ic.FldChar.DirtyAttr.Bool = unioffice.Bool(true)
+	}
+
+	ic = r.newIC()
+	ic.InstrText = wml.NewCT_Text()
+	if fmt != "" {
+		ic.InstrText.Content = code + " " + fmt
+	} else {
+		ic.InstrText.Content = code
+	}
+
+	ic = r.newIC()
+	ic.FldChar = wml.NewCT_FldChar()
+	ic.FldChar.FldCharTypeAttr = wml.ST_FldCharTypeSeparate
+
+	ic = r.newIC()
+	ic.T = wml.NewCT_Text()
+	ic.T.Content = content
+
+	ic = r.newIC()
+	ic.FldChar = wml.NewCT_FldChar()
+	ic.FldChar.FldCharTypeAttr = wml.ST_FldCharTypeEnd
+}
+
 // AddField adds a field (automatically computed text) to the document.
 func (r Run) AddField(code string) {
 	r.AddFieldWithFormatting(code, "", true)

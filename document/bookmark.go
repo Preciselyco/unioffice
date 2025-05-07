@@ -41,8 +41,10 @@ func (b Bookmark) AddRun() Run {
 	for i, c := range b.p.x.EG_PContent {
 		if c == b.pc {
 			r := wml.NewCT_R()
-			b.p.x.EG_PContent = append(b.p.x.EG_PContent, nil)
-			copy(b.p.x.EG_PContent[i+2:], b.p.x.EG_PContent[i+1:])
+			for len(b.p.x.EG_PContent) <= i+2 {
+				b.p.x.EG_PContent = append(b.p.x.EG_PContent, nil) // ensure space for new content
+			}
+			copy(b.p.x.EG_PContent[i+2:], b.p.x.EG_PContent[i+1:]) // shift existing field end
 			b.p.x.EG_PContent[i+1] = wml.NewEG_PContent()
 			b.p.x.EG_PContent[i+1].EG_ContentRunContent = append(b.p.x.EG_PContent[i+1].EG_ContentRunContent, nil)
 			b.p.x.EG_PContent[i+1].EG_ContentRunContent[0] = wml.NewEG_ContentRunContent()
