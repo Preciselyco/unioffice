@@ -224,27 +224,40 @@ func (p Paragraph) AddHyperLink() HyperLink {
 
 // AddBookmark adds a bookmark to a document that can then be used from a hyperlink. Name is a document
 // unique name that identifies the bookmark so it can be referenced from hyperlinks.
-func (p Paragraph) AddBookmark(name string) Bookmark {
+func (p Paragraph) AddBookmark(id int64, name string) Bookmark {
 	pc := wml.NewEG_PContent()
 	rc := wml.NewEG_ContentRunContent()
 	pc.EG_ContentRunContent = append(pc.EG_ContentRunContent, rc)
 
+	pcStart := wml.NewEG_PContent()
+	rcStart := wml.NewEG_ContentRunContent()
+	pcStart.EG_ContentRunContent = append(pcStart.EG_ContentRunContent, rcStart)
+
 	relt := wml.NewEG_RunLevelElts()
-	rc.EG_RunLevelElts = append(rc.EG_RunLevelElts, relt)
+	rcStart.EG_RunLevelElts = append(rcStart.EG_RunLevelElts, relt)
 
 	markEl := wml.NewEG_RangeMarkupElements()
 	bmStart := wml.NewCT_Bookmark()
+	bmStart.IdAttr = id
 	markEl.BookmarkStart = bmStart
 	relt.EG_RangeMarkupElements = append(relt.EG_RangeMarkupElements, markEl)
 
+	pcEnd := wml.NewEG_PContent()
+	rcEnd := wml.NewEG_ContentRunContent()
+	pcEnd.EG_ContentRunContent = append(pcEnd.EG_ContentRunContent, rcEnd)
+
+	relt = wml.NewEG_RunLevelElts()
+	rcEnd.EG_RunLevelElts = append(rcEnd.EG_RunLevelElts, relt)
 	markEl = wml.NewEG_RangeMarkupElements()
-	markEl.BookmarkEnd = wml.NewCT_MarkupRange()
+
+	bmEnd := wml.NewCT_MarkupRange()
+	bmEnd.IdAttr = id
+	markEl.BookmarkEnd = bmEnd
 
 	relt.EG_RangeMarkupElements = append(relt.EG_RangeMarkupElements, markEl)
+	p.x.EG_PContent = append(p.x.EG_PContent, pcStart, pcEnd)
 
-	p.x.EG_PContent = append(p.x.EG_PContent, pc)
-
-	bm := Bookmark{bmStart}
+	bm := Bookmark{x: bmStart, p: &p, pc: pcStart}
 	bm.SetName(name)
 	return bm
 }

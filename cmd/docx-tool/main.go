@@ -5,15 +5,16 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"regexp"
 	"sort"
 	"strings"
 
-	"github.com/Preciselyco/unioffice/document"
 	"github.com/alecthomas/kong"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/go-xmlfmt/xmlfmt" // Regex-based XML formatter library, not an XML parser
+
+	"github.com/Preciselyco/unioffice/document"
 )
 
 type DumpXmlCmd struct {
@@ -29,7 +30,7 @@ func (cmd *DumpXmlCmd) Run() error {
 	defer zipReader.Close()
 
 	// Sort list of files to make it diffable
-	sort.Slice(zipReader.File, func (i, j int) bool { return zipReader.File[i].Name < zipReader.File[j].Name })
+	sort.Slice(zipReader.File, func(i, j int) bool { return zipReader.File[i].Name < zipReader.File[j].Name })
 
 	for _, file := range zipReader.File {
 		if cmd.XmlFile == "" {
@@ -60,7 +61,7 @@ func (cmd *DumpXmlCmd) DumpFile(file *zip.File) error {
 		return err
 	}
 	defer reader.Close()
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}

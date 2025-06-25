@@ -2,13 +2,12 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/Preciselyco/unioffice/common"
 	"github.com/Preciselyco/unioffice/document"
 	"github.com/Preciselyco/unioffice/measurement"
-
 	"github.com/Preciselyco/unioffice/schema/soo/wml"
 )
 
@@ -21,7 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to create image: %s", err)
 	}
-	img2data, err := ioutil.ReadFile("gophercolor.png")
+	img2data, err := os.ReadFile("gophercolor.png")
 	if err != nil {
 		log.Fatalf("unable to read file: %s", err)
 	}
