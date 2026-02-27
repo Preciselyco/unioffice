@@ -67,6 +67,7 @@ func New() *Document {
 	d.docRels = common.NewRelationships()
 	d.AppProperties = common.NewAppProperties()
 	d.CoreProperties = common.NewCoreProperties()
+	d.CustomProperties = common.NewCustomProperties()
 	d.Settings = NewSettings()
 	d.Numbering = NewNumbering()
 	d.Numbering.InitializeDefault()
@@ -163,6 +164,13 @@ func (d *Document) Save(w io.Writer) error {
 	d.Rels.SetRelationship(unioffice.RelativeFilename(unioffice.DocTypeDocument, "", unioffice.CorePropertiesType, 0), unioffice.CorePropertiesType)
 	d.Rels.SetRelationship("docProps/app.xml", unioffice.ExtendedPropertiesType)
 	d.Rels.SetRelationship("word/document.xml", unioffice.OfficeDocumentType)
+	if d.CustomProperties.NonEmpty() {
+		d.ContentTypes.SetOverride("/docProps/custom.xml", "application/vnd.openxmlformats-officedocument.custom-properties+xml")
+		d.Rels.SetRelationship("docProps/custom.xml", unioffice.CustomPropertiesType)
+	} else {
+		d.ContentTypes.RemoveOverride("/docProps/custom.xml")
+		d.Rels.RemoveRelationship("docProps/custom.xml")
+	}
 	d.docRels.SetRelationship("settings.xml", unioffice.SettingsType)
 	d.docRels.SetRelationship("numbering.xml", unioffice.NumberingType)
 	d.docRels.SetRelationship("styles.xml", unioffice.StylesType)
@@ -189,6 +197,11 @@ func (d *Document) Save(w io.Writer) error {
 	}
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.CorePropertiesType, d.CoreProperties.X()); err != nil {
 		return err
+	}
+	if d.CustomProperties.NonEmpty() {
+		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CustomPropertiesType, d.CustomProperties.X()); err != nil {
+			return err
+		}
 	}
 	if d.Thumbnail != nil {
 		tn, err := z.Create("docProps/thumbnail.jpeg")
@@ -744,6 +757,10 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 
 	case unioffice.ExtendedPropertiesType, unioffice.ExtendedPropertiesTypeStrict:
 		decMap.AddTarget(target, d.AppProperties.X(), typ, 0)
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
+	case unioffice.CustomPropertiesType:
+		decMap.AddTarget(target, d.CustomProperties.X(), typ, 0)
 		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
 
 	case unioffice.ThumbnailType, unioffice.ThumbnailTypeStrict:

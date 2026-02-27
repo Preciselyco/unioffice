@@ -18,16 +18,16 @@ import (
 // DocBase is the type embedded in in the Document/Workbook/Presentation types
 // that contains members common to all.
 type DocBase struct {
-	ContentTypes   ContentTypes
-	AppProperties  AppProperties
-	Rels           Relationships
-	CoreProperties CoreProperties
-	Thumbnail      image.Image // thumbnail preview of the document
+	ContentTypes     ContentTypes
+	AppProperties    AppProperties
+	Rels             Relationships
+	CoreProperties   CoreProperties
+	CustomProperties CustomProperties
+	Thumbnail        image.Image // thumbnail preview of the document
 
 	Images     []ImageRef
 	ExtraFiles []ExtraFile
 	TmpPath    string // path where temporary files are stored when opening documents
-
 }
 
 // AddExtraFileFromZip is used when reading an unsupported file from an OOXML
