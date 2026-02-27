@@ -72,6 +72,8 @@ func AbsoluteFilename(dt DocType, typ string, index int) string {
 		return "docProps/core.xml"
 	case ExtendedPropertiesType, ExtendedPropertiesTypeStrict:
 		return "docProps/app.xml"
+	case CustomPropertiesType:
+		return "docProps/custom.xml"
 	case ThumbnailType, ThumbnailTypeStrict:
 		return "docProps/thumbnail.jpeg"
 

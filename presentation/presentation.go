@@ -52,6 +52,7 @@ func newEmpty() *Presentation {
 	p.x.ConformanceAttr = sharedTypes.ST_ConformanceClassTransitional
 	p.AppProperties = common.NewAppProperties()
 	p.CoreProperties = common.NewCoreProperties()
+	p.CustomProperties = common.NewCustomProperties()
 	p.ContentTypes = common.NewContentTypes()
 	p.Rels = common.NewRelationships()
 	p.prels = common.NewRelationships()
@@ -388,6 +389,13 @@ func (p *Presentation) Save(w io.Writer) error {
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.CorePropertiesType, p.CoreProperties.X()); err != nil {
 		return err
 	}
+	if p.CustomProperties.NonEmpty() {
+		p.ContentTypes.SetOverride("/docProps/custom.xml", "application/vnd.openxmlformats-officedocument.custom-properties+xml")
+		p.Rels.SetRelationship("docProps/custom.xml", unioffice.CustomPropertiesType)
+		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CustomPropertiesType, p.CustomProperties.X()); err != nil {
+			return err
+		}
+	}
 	if p.Thumbnail != nil {
 		tn, err := z.Create("docProps/thumbnail.jpeg")
 		if err != nil {
@@ -528,6 +536,10 @@ func (p *Presentation) onNewRelationship(decMap *zippkg.DecodeMap, target, typ s
 
 	case unioffice.ExtendedPropertiesType:
 		decMap.AddTarget(target, p.AppProperties.X(), typ, 0)
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
+	case unioffice.CustomPropertiesType:
+		decMap.AddTarget(target, p.CustomProperties.X(), typ, 0)
 		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
 
 	case unioffice.SlideType:

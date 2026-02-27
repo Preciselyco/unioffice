@@ -268,6 +268,13 @@ func (wb *Workbook) Save(w io.Writer) error {
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.CorePropertiesType, wb.CoreProperties.X()); err != nil {
 		return err
 	}
+	if wb.CustomProperties.NonEmpty() {
+		wb.ContentTypes.SetOverride("/docProps/custom.xml", "application/vnd.openxmlformats-officedocument.custom-properties+xml")
+		wb.Rels.SetRelationship("docProps/custom.xml", unioffice.CustomPropertiesType)
+		if err := zippkg.MarshalXMLByType(z, dt, unioffice.CustomPropertiesType, wb.CustomProperties.X()); err != nil {
+			return err
+		}
+	}
 
 	workbookFn := unioffice.AbsoluteFilename(dt, unioffice.OfficeDocumentType, 0)
 	if err := zippkg.MarshalXML(z, workbookFn, wb.x); err != nil {
@@ -424,6 +431,10 @@ func (wb *Workbook) onNewRelationship(decMap *zippkg.DecodeMap, target, typ stri
 
 	case unioffice.ExtendedPropertiesType:
 		decMap.AddTarget(target, wb.AppProperties.X(), typ, 0)
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
+
+	case unioffice.CustomPropertiesType:
+		decMap.AddTarget(target, wb.CustomProperties.X(), typ, 0)
 		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, 0)
 
 	case unioffice.WorksheetType:
