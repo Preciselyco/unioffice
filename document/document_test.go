@@ -354,7 +354,7 @@ func TestIssue198(t *testing.T) {
 		t.Errorf("error reading %s: %s", fn, err)
 		return
 	}
-	// _ = doc.SaveToFile("testdata/" + fn + ".golden") // Uncomment to update file
+	// _ = doc.SaveToFile("testdata/"+fn+".golden") // Uncomment to update file
 	got := bytes.Buffer{}
 	doc.Save(&got)
 	testhelper.CompareGoldenZip(t, fn+".golden", got.Bytes())
