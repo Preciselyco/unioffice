@@ -950,6 +950,27 @@ func (d Document) AddHyperlink(url string) common.Hyperlink {
 	return d.docRels.AddHyperlink(url)
 }
 
+// FontTable returns the document's font table, or nil if none is present.
+// The returned value exposes the embedded-font relationship IDs (EmbedRegular,
+// EmbedBold, EmbedItalic, EmbedBoldItalic) that reference font binary files
+// via ExtraFiles.
+func (d *Document) FontTable() *wml.Fonts {
+	return d.fontTable
+}
+
+// SetFontTable replaces the document's font table.  Pass the value obtained
+// from another document's FontTable() to carry embedded fonts across.
+func (d *Document) SetFontTable(f *wml.Fonts) {
+	d.fontTable = f
+}
+
+// EnsureFontTableRel adds the fontTable.xml relationship to the document
+// relationships if it is not already present.  Call this after SetFontTable
+// so that Word can locate the font table in the saved file.
+func (d *Document) EnsureFontTableRel() {
+	d.docRels.SetRelationship("fontTable.xml", unioffice.FontTableType)
+}
+
 func bookmarks(bc *wml.EG_ContentBlockContent) []Bookmark {
 	ret := []Bookmark{}
 
