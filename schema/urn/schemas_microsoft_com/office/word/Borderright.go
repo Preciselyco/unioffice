@@ -27,7 +27,6 @@ func NewBorderright() *Borderright {
 
 func (m *Borderright) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns"}, Value: "urn:schemas-microsoft-com:office:word"})
-	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:xml"}, Value: "http://www.w3.org/XML/1998/namespace"})
 	start.Name.Local = "borderright"
 	return m.CT_Border.MarshalXML(e, start)
 }

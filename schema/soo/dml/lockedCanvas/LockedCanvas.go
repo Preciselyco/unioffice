@@ -28,7 +28,6 @@ func NewLockedCanvas() *LockedCanvas {
 
 func (m *LockedCanvas) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns"}, Value: "http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas"})
-	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:xml"}, Value: "http://www.w3.org/XML/1998/namespace"})
 	start.Name.Local = "lockedCanvas"
 	return m.CT_GvmlGroupShape.MarshalXML(e, start)
 }

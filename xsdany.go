@@ -38,6 +38,7 @@ var wellKnownSchemas = map[string]string{
 	"wpg":     "http://schemas.microsoft.com/office/word/2010/wordprocessingGroup",
 	"wpi":     "http://schemas.microsoft.com/office/word/2010/wordprocessingInk",
 	"wps":     "http://schemas.microsoft.com/office/word/2010/wordprocessingShape",
+	"xml":     "http://www.w3.org/XML/1998/namespace",
 	"xsi":     "http://www.w3.org/2001/XMLSchema-instance",
 	"x15ac":   "http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac",
 }
