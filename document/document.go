@@ -48,12 +48,13 @@ type Document struct {
 	footers []*wml.Ftr
 	ftrRels []common.Relationships
 
-	docRels     common.Relationships
-	themes      []*dml.Theme
-	webSettings *wml.WebSettings
-	fontTable   *wml.Fonts
-	endNotes    *wml.Endnotes
-	footNotes   *wml.Footnotes
+	docRels       common.Relationships
+	themes        []*dml.Theme
+	webSettings   *wml.WebSettings
+	fontTable     *wml.Fonts
+	endNotes      *wml.Endnotes
+	footNotes     *wml.Footnotes
+	imageZipPaths map[string]int // zip path → 1-based index in d.Images; used to deduplicate shared images
 }
 
 // New constructs an empty document that content can be added to.
@@ -75,6 +76,7 @@ func New() *Document {
 	d.Styles.InitializeDefault()
 	d.Comments = NewComments(d)
 	d.CommentsExtended = NewCommentsExtended()
+	d.imageZipPaths = map[string]int{}
 
 	return d
 }
@@ -847,27 +849,38 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 
 	case unioffice.ImageType, unioffice.ImageTypeStrict:
 		var iref common.ImageRef
-		for i, f := range files {
-			if f == nil {
-				continue
-			}
-			if f.Name == target {
-				path, err := zippkg.ExtractToDiskTmp(f, d.TmpPath)
-				if err != nil {
-					return err
+		// Check if this zip path was already loaded (e.g. the same image is
+		// referenced by multiple headers).  If so, reuse the existing ImageRef
+		// so we don't emit a broken relationship pointing at a non-existent
+		// second copy of the file.
+		if idx, ok := d.imageZipPaths[target]; ok {
+			iref = d.Images[idx-1]
+		} else {
+			for i, f := range files {
+				if f == nil {
+					continue
 				}
-				img, err := common.ImageFromFile(path)
-				if err != nil {
-					return err
+				if f.Name == target {
+					path, err := zippkg.ExtractToDiskTmp(f, d.TmpPath)
+					if err != nil {
+						return err
+					}
+					img, err := common.ImageFromFile(path)
+					if err != nil {
+						return err
+					}
+					iref = common.MakeImageRef(img, &d.DocBase, d.docRels)
+					d.Images = append(d.Images, iref)
+					d.imageZipPaths[target] = len(d.Images)
+					files[i] = nil
 				}
-				iref = common.MakeImageRef(img, &d.DocBase, d.docRels)
-				d.Images = append(d.Images, iref)
-				files[i] = nil
 			}
 		}
 
 		ext := "." + strings.ToLower(iref.Format())
-		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, len(d.Images))
+		// Use the index of the image this rel points to (reused or newly added).
+		imgIdx := d.imageZipPaths[target]
+		rel.TargetAttr = unioffice.RelativeFilename(dt, src.Typ, typ, imgIdx)
 		// ensure we don't change image formats
 		if newExt := filepath.Ext(rel.TargetAttr); newExt != ext {
 			rel.TargetAttr = rel.TargetAttr[0:len(rel.TargetAttr)-len(newExt)] + ext
