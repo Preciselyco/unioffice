@@ -877,6 +877,15 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 			}
 		}
 
+		// Ensure the content-type for the (possibly normalised) extension is
+		// registered.  ImageFromFile uses Go's image library which always
+		// reports "jpeg" (never "jpg"), so without this the Content_Types.xml
+		// would keep the original "jpg" default from the template while the
+		// saved file is named ".jpeg", causing Word to reject it.
+		if iref.Format() != "" {
+			d.ContentTypes.EnsureDefault(strings.ToLower(iref.Format()), "image/"+strings.ToLower(iref.Format()))
+		}
+
 		ext := "." + strings.ToLower(iref.Format())
 		// Use the index of the image this rel points to (reused or newly added).
 		imgIdx := d.imageZipPaths[target]

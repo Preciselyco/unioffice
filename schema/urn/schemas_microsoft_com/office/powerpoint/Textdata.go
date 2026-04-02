@@ -26,7 +26,6 @@ func NewTextdata() *Textdata {
 
 func (m *Textdata) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns"}, Value: "urn:schemas-microsoft-com:office:powerpoint"})
-	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:xml"}, Value: "http://www.w3.org/XML/1998/namespace"})
 	start.Name.Local = "textdata"
 	return m.CT_Rel.MarshalXML(e, start)
 }

@@ -26,7 +26,6 @@ func NewAnchorlock() *Anchorlock {
 
 func (m *Anchorlock) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns"}, Value: "urn:schemas-microsoft-com:office:word"})
-	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:xml"}, Value: "http://www.w3.org/XML/1998/namespace"})
 	start.Name.Local = "anchorlock"
 	return m.CT_AnchorLock.MarshalXML(e, start)
 }
