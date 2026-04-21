@@ -1054,3 +1054,12 @@ func (d Document) Bookmarks() []Bookmark {
 	}
 	return ret
 }
+
+// Close closes the document, removing any temporary files that might have been
+// created when opening a document.
+func (d *Document) Close() error {
+	if d.TmpPath != "" && strings.HasPrefix(d.TmpPath, os.TempDir()) {
+		return os.RemoveAll(d.TmpPath)
+	}
+	return nil
+}
