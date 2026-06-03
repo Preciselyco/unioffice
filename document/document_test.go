@@ -9,7 +9,10 @@ package document_test
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -483,4 +486,116 @@ func TestComments(t *testing.T) {
 	testhelper.CompareGoldenZip(t, "comments.docx", got.Bytes())
 	recoded := recodeDocx(t, got.Bytes())
 	testhelper.CompareGoldenZip(t, "comments.docx", recoded)
+}
+
+// TestCloseOnlyRemovesTempDir verifies that Close() does not delete directories
+// whose path merely starts with os.TempDir() but are not under it (e.g.
+// "/tmpfoo/..." on Linux where os.TempDir() == "/tmp").
+func TestCloseOnlyRemovesTempDir(t *testing.T) {
+	// Create a directory that shares the temp-dir prefix but is a sibling, not
+	// a child.  On Linux this is e.g. /tmp + "foo" = /tmpfoo.
+	// We use a real subdirectory under the real temp dir so the test works on
+	// all platforms (Windows, macOS) without needing root or special paths.
+	// The important thing is to verify the HasPrefix+separator guard: we set
+	// TmpPath to a path that does NOT have os.TempDir()+separator as a prefix
+	// and confirm it is left alone.
+	outsideDir := filepath.Join(os.TempDir()+"suffix_test", "gooxml-close-test")
+	if err := os.MkdirAll(outsideDir, 0o700); err != nil {
+		t.Skipf("cannot create test directory %s: %v", outsideDir, err)
+	}
+	defer os.RemoveAll(filepath.Dir(outsideDir))
+
+	doc := document.New()
+	doc.TmpPath = outsideDir
+
+	if err := doc.Close(); err != nil {
+		t.Fatalf("Close() returned unexpected error: %v", err)
+	}
+
+	if _, err := os.Stat(outsideDir); os.IsNotExist(err) {
+		t.Errorf("Close() deleted %q which is not under os.TempDir()", outsideDir)
+	}
+}
+
+// TestReadCleansUpTmpDirOnError verifies that Read() removes its temporary
+// directory when parsing fails, so callers that receive (nil, err) do not leak
+// the directory.
+func TestReadCleansUpTmpDirOnError(t *testing.T) {
+	// Snapshot gooxml-docx* entries in the system temp dir before the call.
+	before := tmpDocxDirs(t)
+
+	_, err := document.ReadFromBytes([]byte("this is not a valid zip"))
+	if err == nil {
+		t.Fatal("expected ReadFromBytes to fail on invalid input")
+	}
+
+	after := tmpDocxDirs(t)
+
+	// Any gooxml-docx* directory that appeared during the call should be gone.
+	for dir := range after {
+		if !before[dir] {
+			t.Errorf("temp directory %q was not cleaned up after Read error", dir)
+		}
+	}
+}
+
+// tmpDocxDirs returns the set of gooxml-docx* directory names present in
+// os.TempDir().
+func tmpDocxDirs(t *testing.T) map[string]bool {
+	t.Helper()
+	entries, err := os.ReadDir(os.TempDir())
+	if err != nil {
+		t.Fatalf("cannot read temp dir: %v", err)
+	}
+	dirs := map[string]bool{}
+	for _, e := range entries {
+		if e.IsDir() && strings.HasPrefix(e.Name(), "gooxml-docx") {
+			dirs[e.Name()] = true
+		}
+	}
+	return dirs
+}
+
+// TestSetFontTableRoundTrip verifies that FontTable/SetFontTable preserve the
+// *wml.Fonts pointer and that EnsureFontTableRel adds the expected relationship.
+func TestSetFontTableRoundTrip(t *testing.T) {
+	src := document.New()
+	// FontTable is nil on a freshly constructed document.
+	if src.FontTable() != nil {
+		t.Fatal("expected nil FontTable on new document")
+	}
+
+	fonts := wml.NewFonts()
+	src.SetFontTable(fonts)
+	if src.FontTable() != fonts {
+		t.Error("SetFontTable/FontTable round-trip failed: pointer mismatch")
+	}
+
+	// Transfer to a second document and ensure the relationship is wired up.
+	dst := document.New()
+	dst.SetFontTable(src.FontTable())
+	dst.EnsureFontTableRel()
+
+	// Verify the relationship exists by saving and checking the zip contents.
+	var buf bytes.Buffer
+	if err := dst.Save(&buf); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+	contents := buf.String()
+	if !strings.Contains(contents, "fontTable") {
+		t.Error("saved document does not reference fontTable")
+	}
+}
+
+// TestSetFontTableDocstringWarning is a compile-time documentation test: it
+// calls SetFontTable with a value from another document to confirm the API
+// exists and accepts the right type, and documents via fmt.Sprintf that the
+// caller is responsible for copying ExtraFiles.
+func TestSetFontTableAPIExists(t *testing.T) {
+	src := document.New()
+	src.SetFontTable(wml.NewFonts())
+	dst := document.New()
+	dst.SetFontTable(src.FontTable())
+	// Embedded font binaries are in src.ExtraFiles and must be copied separately.
+	_ = fmt.Sprintf("ExtraFiles to copy: %d", len(src.ExtraFiles))
 }
