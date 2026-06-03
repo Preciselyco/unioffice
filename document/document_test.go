@@ -502,7 +502,7 @@ func TestCloseOnlyRemovesTempDir(t *testing.T) {
 	if err := os.MkdirAll(outsideDir, 0o700); err != nil {
 		t.Skipf("cannot create test directory %s: %v", outsideDir, err)
 	}
-	defer os.RemoveAll(filepath.Dir(outsideDir))
+	defer func() { _ = os.RemoveAll(filepath.Dir(outsideDir)) }()
 
 	doc := document.New()
 	doc.TmpPath = outsideDir

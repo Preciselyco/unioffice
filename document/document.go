@@ -561,7 +561,7 @@ func Read(r io.ReaderAt, size int64) (*Document, error) {
 	var retErr error
 	defer func() {
 		if retErr != nil {
-			os.RemoveAll(td)
+			_ = os.RemoveAll(td)
 		}
 	}()
 
