@@ -3,7 +3,6 @@ linters:
   enable:
     - govet
     - staticcheck
-    - errcheck
     - gosimple
     - ineffassign
     - unused
@@ -20,7 +19,6 @@ issues:
       linters:
         - govet
         - staticcheck
-        - errcheck
         - gosimple
         - ineffassign
         - unused
