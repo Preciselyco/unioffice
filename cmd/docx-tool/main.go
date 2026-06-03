@@ -18,8 +18,8 @@ import (
 )
 
 type DumpXmlCmd struct {
-	DocxFile string `arg required help:"Input file"`  //nolint:govet
-	XmlFile  string `arg optional help:"File to extract"` //nolint:govet
+	DocxFile string `arg:"" help:"Input file"`
+	XmlFile  string `arg:"" optional:"" help:"File to extract"`
 }
 
 func (cmd *DumpXmlCmd) Run() error {
@@ -71,7 +71,7 @@ func (cmd *DumpXmlCmd) DumpFile(file *zip.File) error {
 
 type SpewCmd struct {
 	NoNil    bool   `help:"Filter out nil values"`
-	DocxFile string `arg required help:"Input file"` //nolint:govet
+	DocxFile string `arg:"" help:"Input file"`
 }
 
 func (cmd *SpewCmd) Run() error {
@@ -92,8 +92,8 @@ func (cmd *SpewCmd) Run() error {
 }
 
 type RecodeCmd struct {
-	InFile  string `arg required help:"Input file"`  //nolint:govet
-	OutFile string `arg required help:"Output file"` //nolint:govet
+	InFile  string `arg:"" help:"Input file"`
+	OutFile string `arg:"" help:"Output file"`
 }
 
 func (cmd *RecodeCmd) Run() error {
@@ -112,9 +112,9 @@ func (cmd *RecodeCmd) Run() error {
 
 func main() {
 	cli := struct {
-		DumpXml DumpXmlCmd `cmd help:"Pretty-print XML file(s) from DOCX file"` //nolint:govet
-		Spew    SpewCmd    `cmd help:"Parse DOCX file and dump data structure"` //nolint:govet
-		Recode  RecodeCmd  `cmd help:"Parse DOCX file and save to new file"`   //nolint:govet
+		DumpXml DumpXmlCmd `cmd:"" help:"Pretty-print XML file(s) from DOCX file"`
+		Spew    SpewCmd    `cmd:"" help:"Parse DOCX file and dump data structure"`
+		Recode  RecodeCmd  `cmd:"" help:"Parse DOCX file and save to new file"`
 	}{}
 	ctx := kong.Parse(&cli)
 	err := ctx.Run()
