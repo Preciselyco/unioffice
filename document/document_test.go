@@ -30,7 +30,9 @@ func TestSimpleDoc(t *testing.T) {
 	if err := doc.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
 	}
-	doc.Save(&got)
+	if err := doc.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "simple-1.docx", got.Bytes())
 }
 
@@ -44,7 +46,9 @@ func TestOpen(t *testing.T) {
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareZip(t, "simple-1.docx", got.Bytes(), true)
 }
 
@@ -58,8 +62,10 @@ func TestOpenStrict(t *testing.T) {
 	if err := strict.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
 	}
-	strict.Save(&gotStrict)
-	os.WriteFile("testdata/non-strict.docx", gotStrict.Bytes(), 0644)
+	if err := strict.Save(&gotStrict); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
+	_ = os.WriteFile("testdata/non-strict.docx", gotStrict.Bytes(), 0644)
 
 	// run test assuming that the doc is a valid non-strict doc
 	nonStrict, err := document.Open("testdata/non-strict.docx")
@@ -71,10 +77,12 @@ func TestOpenStrict(t *testing.T) {
 	if err := nonStrict.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
 	}
-	nonStrict.Save(&gotNonStrict)
+	if err := nonStrict.Save(&gotNonStrict); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareZip(t, "non-strict.docx", gotNonStrict.Bytes(), true)
 
-	os.Remove("testdata/non-strict.docx")
+	_ = os.Remove("testdata/non-strict.docx")
 }
 
 func TestOpenHeaderFooter(t *testing.T) {
@@ -88,7 +96,9 @@ func TestOpenHeaderFooter(t *testing.T) {
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid document: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "header-footer-multiple.docx", got.Bytes())
 }
 
@@ -356,7 +366,9 @@ func TestIssue198(t *testing.T) {
 	}
 	// _ = doc.SaveToFile("testdata/" + fn + ".golden") // Uncomment to update file
 	got := bytes.Buffer{}
-	doc.Save(&got)
+	if err := doc.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, fn+".golden", got.Bytes())
 }
 
@@ -400,7 +412,9 @@ func recodeDocx(t *testing.T, docx []byte) []byte {
 		t.Errorf("failed to validate document: %s", err)
 	}
 	buf := bytes.Buffer{}
-	doc.Save(&buf)
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	return buf.Bytes()
 }
 
@@ -420,7 +434,9 @@ func TestRunTrackChange(t *testing.T) {
 	}
 	// _ = doc.SaveToFile("testdata/runtrackchange.docx") // Uncomment to update file
 	got := bytes.Buffer{}
-	doc.Save(&got)
+	if err := doc.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "runtrackchange.docx", got.Bytes())
 	recoded := recodeDocx(t, got.Bytes())
 	testhelper.CompareGoldenZip(t, "runtrackchange.docx", recoded)
@@ -479,7 +495,9 @@ func TestComments(t *testing.T) {
 	}
 	// _ = doc.SaveToFile("testdata/comments.docx") // Uncomment to update file
 	got := bytes.Buffer{}
-	doc.Save(&got)
+	if err := doc.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "comments.docx", got.Bytes())
 	recoded := recodeDocx(t, got.Bytes())
 	testhelper.CompareGoldenZip(t, "comments.docx", recoded)

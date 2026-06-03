@@ -43,9 +43,9 @@ func main() {
 					record = append(record, v)
 				}
 			}
-			cw.Write(record)
+			_ = cw.Write(record)
 		}
 		cw.Flush()
-		f.Close()
+		_ = f.Close()
 	}
 }

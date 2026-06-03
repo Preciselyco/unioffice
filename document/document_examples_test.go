@@ -10,7 +10,7 @@ import (
 func ExampleNew() {
 	doc := document.New()
 	doc.AddParagraph().AddRun().AddText("Hello World!")
-	doc.SaveToFile("document.docx")
+	_ = doc.SaveToFile("document.docx")
 }
 
 func ExampleOpen() {
@@ -42,7 +42,7 @@ func ExampleOpenTemplate() {
 	para = doc.AddParagraph()
 	para.SetStyle("Heading1")
 	para.AddRun().AddText("Major Section")
-	doc.SaveToFile("ouput.docx")
+	_ = doc.SaveToFile("ouput.docx")
 }
 
 func ExampleDocument_FormFields() {
@@ -62,5 +62,5 @@ func ExampleDocument_FormFields() {
 			}
 		}
 	}
-	doc.SaveToFile("invitation-respoonse.docx")
+	_ = doc.SaveToFile("invitation-respoonse.docx")
 }

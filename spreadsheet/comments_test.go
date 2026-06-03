@@ -20,7 +20,9 @@ func TestComments(t *testing.T) {
 
 	expRef := "A1"
 	expAuth := "John Doe"
-	c.AddCommentWithStyle(expRef, expAuth, "This is my comment")
+	if err := c.AddCommentWithStyle(expRef, expAuth, "This is my comment"); err != nil {
+		t.Fatalf("AddCommentWithStyle: %s", err)
+	}
 	if c.X().Authors == nil {
 		t.Fatalf("author should be non-nil")
 	}
@@ -52,7 +54,9 @@ func TestCommentsReusesAuthorIDs(t *testing.T) {
 	sheet := wb.AddSheet()
 	c := sheet.Comments()
 
-	c.AddCommentWithStyle("A1", "foo", "This is my comment")
+	if err := c.AddCommentWithStyle("A1", "foo", "This is my comment"); err != nil {
+		t.Fatalf("AddCommentWithStyle: %s", err)
+	}
 	if c.X().Authors == nil {
 		t.Fatalf("author should be non-nil")
 	}
@@ -60,7 +64,9 @@ func TestCommentsReusesAuthorIDs(t *testing.T) {
 		t.Errorf("expected one author, got %v", c.X().Authors.Author)
 	}
 
-	c.AddCommentWithStyle("B1", "foo", "This is another comment")
+	if err := c.AddCommentWithStyle("B1", "foo", "This is another comment"); err != nil {
+		t.Fatalf("AddCommentWithStyle: %s", err)
+	}
 	if c.X().Authors == nil {
 		t.Fatalf("author should be non-nil")
 	}
@@ -68,7 +74,9 @@ func TestCommentsReusesAuthorIDs(t *testing.T) {
 		t.Errorf("expected one author, got %v", c.X().Authors.Author)
 	}
 
-	c.AddCommentWithStyle("C1", "bar", "This is the last comment")
+	if err := c.AddCommentWithStyle("C1", "bar", "This is the last comment"); err != nil {
+		t.Fatalf("AddCommentWithStyle: %s", err)
+	}
 	if c.X().Authors == nil {
 		t.Fatalf("author should be non-nil")
 	}

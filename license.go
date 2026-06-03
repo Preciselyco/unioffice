@@ -115,7 +115,7 @@ func (l License) Verify(pubKey *rsa.PublicKey) error {
 func (l License) String() string {
 	buf := bytes.Buffer{}
 	enc := json.NewEncoder(&buf)
-	enc.Encode(l)
+	_ = enc.Encode(l)
 	return buf.String()
 }
 
@@ -126,8 +126,8 @@ func (l License) Encoded() string {
 	w := base64.NewEncoder(base64.RawURLEncoding, &buf)
 	gz, _ := gzip.NewWriterLevel(w, gzip.BestCompression)
 	enc := json.NewEncoder(gz)
-	enc.Encode(l)
-	gz.Close()
+	_ = enc.Encode(l)
+	_ = gz.Close()
 
 	rsp := bytes.Buffer{}
 	const maxLen = 40

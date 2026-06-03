@@ -69,7 +69,7 @@ func TestRawEncode(t *testing.T) {
 	end := strings.LastIndex(xmlStr, "</w:hdrShapeDefaults>")
 
 	gotRaw := xmlStr[beg+20 : end]
-	exp := "<o:shapedefaults xmlns=\"urn:schemas-microsoft-com:office:office\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:s=\"http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes\" xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\" spidmax=\"2049\" ext=\"edit\"/>"
+	exp := "<o:shapedefaults xmlns=\"urn:schemas-microsoft-com:office:office\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:s=\"http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes\" xmlns:v=\"urn:schemas-microsoft-com:vml\" spidmax=\"2049\" ext=\"edit\"/>"
 	if gotRaw != exp {
 		t.Errorf("expected\n%q\ngot\n%q\n", exp, gotRaw)
 	}

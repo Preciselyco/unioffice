@@ -18,8 +18,8 @@ import (
 )
 
 type DumpXmlCmd struct {
-	DocxFile string `arg required help:"Input file"`
-	XmlFile  string `arg optional help:"File to extract"`
+	DocxFile string `arg required help:"Input file"`  //nolint:govet
+	XmlFile  string `arg optional help:"File to extract"` //nolint:govet
 }
 
 func (cmd *DumpXmlCmd) Run() error {
@@ -27,7 +27,7 @@ func (cmd *DumpXmlCmd) Run() error {
 	if err != nil {
 		return err
 	}
-	defer zipReader.Close()
+	defer func() { _ = zipReader.Close() }()
 
 	// Sort list of files to make it diffable
 	sort.Slice(zipReader.File, func(i, j int) bool { return zipReader.File[i].Name < zipReader.File[j].Name })
@@ -60,7 +60,7 @@ func (cmd *DumpXmlCmd) DumpFile(file *zip.File) error {
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (cmd *DumpXmlCmd) DumpFile(file *zip.File) error {
 
 type SpewCmd struct {
 	NoNil    bool   `help:"Filter out nil values"`
-	DocxFile string `arg required help:"Input file"`
+	DocxFile string `arg required help:"Input file"` //nolint:govet
 }
 
 func (cmd *SpewCmd) Run() error {
@@ -92,8 +92,8 @@ func (cmd *SpewCmd) Run() error {
 }
 
 type RecodeCmd struct {
-	InFile  string `arg required help:"Input file"`
-	OutFile string `arg required help:"Output file"`
+	InFile  string `arg required help:"Input file"`  //nolint:govet
+	OutFile string `arg required help:"Output file"` //nolint:govet
 }
 
 func (cmd *RecodeCmd) Run() error {
@@ -112,9 +112,9 @@ func (cmd *RecodeCmd) Run() error {
 
 func main() {
 	cli := struct {
-		DumpXml DumpXmlCmd `cmd help:"Pretty-print XML file(s) from DOCX file"`
-		Spew    SpewCmd    `cmd help:"Parse DOCX file and dump data structure"`
-		Recode  RecodeCmd  `cmd help:"Parse DOCX file and save to new file"`
+		DumpXml DumpXmlCmd `cmd help:"Pretty-print XML file(s) from DOCX file"` //nolint:govet
+		Spew    SpewCmd    `cmd help:"Parse DOCX file and dump data structure"` //nolint:govet
+		Recode  RecodeCmd  `cmd help:"Parse DOCX file and save to new file"`   //nolint:govet
 	}{}
 	ctx := kong.Parse(&cli)
 	err := ctx.Run()

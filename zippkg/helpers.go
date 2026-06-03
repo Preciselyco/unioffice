@@ -40,7 +40,7 @@ func Decode(f *zip.File, dest interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading %s: %s", f.Name, err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 	dec := xml.NewDecoder(rc)
 	if err := dec.Decode(dest); err != nil {
 		return fmt.Errorf("error decoding %s: %s", f.Name, err)
@@ -149,12 +149,12 @@ func ExtractToDiskTmp(f *zip.File, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer tmpFile.Close()
+	defer func() { _ = tmpFile.Close() }()
 	rc, err := f.Open()
 	if err != nil {
 		return "", err
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 	_, err = io.Copy(tmpFile, rc)
 	if err != nil {
 		return "", err

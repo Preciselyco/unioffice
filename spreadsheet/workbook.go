@@ -232,7 +232,7 @@ func (wb *Workbook) SaveToFile(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return wb.Save(f)
 }
 
@@ -256,7 +256,7 @@ func (wb *Workbook) Epoch() time.Time {
 // Save writes the workbook out to a writer in the zipped xlsx format.
 func (wb *Workbook) Save(w io.Writer) error {
 	z := zip.NewWriter(w)
-	defer z.Close()
+	defer func() { _ = z.Close() }()
 	dt := unioffice.DocTypeSpreadsheet
 
 	if err := zippkg.MarshalXML(z, unioffice.BaseRelsFilename, wb.Rels.X()); err != nil {
@@ -298,8 +298,12 @@ func (wb *Workbook) Save(w io.Writer) error {
 		sheet.Dimension.RefAttr = Sheet{wb, nil, sheet}.Extents()
 
 		fn := unioffice.AbsoluteFilename(dt, unioffice.WorksheetType, i+1)
-		zippkg.MarshalXML(z, fn, sheet)
-		zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), wb.xwsRels[i].X())
+		if err := zippkg.MarshalXML(z, fn, sheet); err != nil {
+			return err
+		}
+		if err := zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), wb.xwsRels[i].X()); err != nil {
+			return err
+		}
 	}
 	if err := zippkg.MarshalXMLByType(z, dt, unioffice.SharedStingsType, wb.SharedStrings.X()); err != nil {
 		return err
@@ -317,21 +321,31 @@ func (wb *Workbook) Save(w io.Writer) error {
 	}
 	for i, chart := range wb.charts {
 		fn := unioffice.AbsoluteFilename(dt, unioffice.ChartType, i+1)
-		zippkg.MarshalXML(z, fn, chart)
+		if err := zippkg.MarshalXML(z, fn, chart); err != nil {
+			return err
+		}
 	}
 	for i, tbl := range wb.tables {
 		fn := unioffice.AbsoluteFilename(dt, unioffice.TableType, i+1)
-		zippkg.MarshalXML(z, fn, tbl)
+		if err := zippkg.MarshalXML(z, fn, tbl); err != nil {
+			return err
+		}
 	}
 	for i, drawing := range wb.drawings {
 		fn := unioffice.AbsoluteFilename(dt, unioffice.DrawingType, i+1)
-		zippkg.MarshalXML(z, fn, drawing)
+		if err := zippkg.MarshalXML(z, fn, drawing); err != nil {
+			return err
+		}
 		if !wb.drawingRels[i].IsEmpty() {
-			zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), wb.drawingRels[i].X())
+			if err := zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), wb.drawingRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 	for i, drawing := range wb.vmlDrawings {
-		zippkg.MarshalXML(z, unioffice.AbsoluteFilename(dt, unioffice.VMLDrawingType, i+1), drawing)
+		if err := zippkg.MarshalXML(z, unioffice.AbsoluteFilename(dt, unioffice.VMLDrawingType, i+1), drawing); err != nil {
+			return err
+		}
 		// never seen relationships for a VML drawing yet
 	}
 
@@ -353,7 +367,9 @@ func (wb *Workbook) Save(w io.Writer) error {
 		if cmt == nil {
 			continue
 		}
-		zippkg.MarshalXML(z, unioffice.AbsoluteFilename(dt, unioffice.CommentsType, i+1), cmt)
+		if err := zippkg.MarshalXML(z, unioffice.AbsoluteFilename(dt, unioffice.CommentsType, i+1), cmt); err != nil {
+			return err
+		}
 	}
 
 	if err := wb.WriteExtraFiles(z); err != nil {
@@ -483,7 +499,7 @@ func (wb *Workbook) onNewRelationship(decMap *zippkg.DecodeMap, target, typ stri
 					return fmt.Errorf("error reading thumbnail: %s", err)
 				}
 				wb.Thumbnail, _, err = image.Decode(rc)
-				rc.Close()
+				_ = rc.Close()
 				if err != nil {
 					return fmt.Errorf("error decoding thumbnail: %s", err)
 				}
@@ -707,7 +723,7 @@ func (wb *Workbook) GetSheet(name string) (Sheet, error) {
 }
 
 func workbookFinalizer(wb *Workbook) {
-	wb.Close()
+	_ = wb.Close()
 }
 
 // Close closes the workbook, removing any temporary files that might have been

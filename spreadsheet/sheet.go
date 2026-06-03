@@ -323,7 +323,7 @@ func (s Sheet) ClearAutoFilter() {
 	for _, dn := range s.w.DefinedNames() {
 		if dn.Name() == autoFilterName {
 			if strings.HasPrefix(dn.Content(), sn) {
-				s.w.RemoveDefinedName(dn)
+				_ = s.w.RemoveDefinedName(dn)
 				break
 			}
 		}
@@ -664,7 +664,7 @@ func (s *Sheet) RecalculateFormulas() {
 					// the formula is of type array, so if the result is also an
 					// array we need to expand the array out into cells
 					if c.X().F.TAttr == sml.ST_CellFormulaTypeArray && res.Type == formula.ResultTypeArray {
-						s.setArray(c.Reference(), res)
+						_ = s.setArray(c.Reference(), res)
 					} else if c.X().F.TAttr == sml.ST_CellFormulaTypeShared && c.X().F.RefAttr != nil {
 						from, to, err := reference.ParseRangeReference(*c.X().F.RefAttr)
 						if err != nil {

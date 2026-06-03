@@ -52,7 +52,7 @@ func CompareZip(t *testing.T, expectedFn string, got []byte, cmpFileContents boo
 	if err != nil {
 		t.Fatalf("unable to read golden file: %s", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	fi, err := os.Stat(golden)
 	if err != nil {
@@ -130,12 +130,12 @@ func compareFiles(exp, got *zip.File) func(t *testing.T) {
 		if err != nil {
 			t.Errorf("error opening %s", exp.Name)
 		}
-		defer ef.Close()
+		defer func() { _ = ef.Close() }()
 		gf, err := got.Open()
 		if err != nil {
 			t.Errorf("error opening %s", got.Name)
 		}
-		defer gf.Close()
+		defer func() { _ = gf.Close() }()
 
 		expAll, _ := io.ReadAll(ef)
 		gotAll, _ := io.ReadAll(gf)
@@ -151,7 +151,7 @@ func compareFiles(exp, got *zip.File) func(t *testing.T) {
 
 func tempFilePath(prefix string) string {
 	expF, _ := ioutil.TempFile("", prefix)
-	defer expF.Close()
+	defer func() { _ = expF.Close() }()
 	return expF.Name()
 }
 
@@ -165,12 +165,12 @@ func xmlIndentFile(fn string) error {
 	if err = dec.Decode(&any); err != nil {
 		return err
 	}
-	f.Close()
+	_ = f.Close()
 	f, err = os.Create(fn)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	enc := xml.NewEncoder(f)
 	enc.Indent("", "  ")
 	return enc.Encode(&any)
@@ -178,24 +178,24 @@ func xmlIndentFile(fn string) error {
 
 func dumpXmlDiff(t *testing.T, exp, got []byte) {
 	expF := tempFilePath("expected")
-	os.WriteFile(expF, exp, 0644)
+	_ = os.WriteFile(expF, exp, 0644)
 	gotF := tempFilePath("got")
-	os.WriteFile(gotF, got, 0644)
+	_ = os.WriteFile(gotF, got, 0644)
 
-	xmlIndentFile(expF)
-	xmlIndentFile(gotF)
+	_ = xmlIndentFile(expF)
+	_ = xmlIndentFile(gotF)
 
 	diff := exec.Command("diff", "-u", expF, gotF)
 	outp, err := diff.StdoutPipe()
 	if err != nil {
 		t.Fatalf("error running xmlindent: %s", err)
 	}
-	defer outp.Close()
+	defer func() { _ = outp.Close() }()
 	errp, err := diff.StderrPipe()
 	if err != nil {
 		t.Fatalf("error running xmlindent: %s", err)
 	}
-	defer errp.Close()
+	defer func() { _ = errp.Close() }()
 
 	if err := diff.Start(); err != nil {
 		t.Fatalf("error string xmlindent: %s", err)

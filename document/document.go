@@ -190,7 +190,7 @@ func (d *Document) Save(w io.Writer) error {
 	dt := unioffice.DocTypeDocument
 
 	z := zip.NewWriter(w)
-	defer z.Close()
+	defer func() { _ = z.Close() }()
 	if err := zippkg.MarshalXML(z, unioffice.BaseRelsFilename, d.Rels.X()); err != nil {
 		return err
 	}
@@ -277,7 +277,9 @@ func (d *Document) Save(w io.Writer) error {
 			return err
 		}
 		if !d.hdrRels[i].IsEmpty() {
-			zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), d.hdrRels[i].X())
+			if err := zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), d.hdrRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 	for i, ftr := range d.footers {
@@ -286,7 +288,9 @@ func (d *Document) Save(w io.Writer) error {
 			return err
 		}
 		if !d.ftrRels[i].IsEmpty() {
-			zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), d.ftrRels[i].X())
+			if err := zippkg.MarshalXML(z, zippkg.RelationsPathFor(fn), d.ftrRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -509,7 +513,7 @@ func (d *Document) SaveToFile(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return d.Save(f)
 }
 
@@ -519,7 +523,7 @@ func Open(filename string) (*Document, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening %s: %s", filename, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error opening %s: %s", filename, err)
@@ -777,7 +781,7 @@ func (d *Document) onNewRelationship(decMap *zippkg.DecodeMap, target, typ strin
 					return fmt.Errorf("error reading thumbnail: %s", err)
 				}
 				d.Thumbnail, _, err = image.Decode(rc)
-				rc.Close()
+				_ = rc.Close()
 				if err != nil {
 					return fmt.Errorf("error decoding thumbnail: %s", err)
 				}

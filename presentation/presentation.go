@@ -309,7 +309,9 @@ func (p *Presentation) AddSlideWithLayout(l SlideLayout) (Slide, error) {
 	if err := l.x.CSld.MarshalXML(enc, start); err != nil {
 		return Slide{}, err
 	}
-	enc.Flush()
+	if err := enc.Flush(); err != nil {
+		return Slide{}, err
+	}
 
 	dec := xml.NewDecoder(&buf)
 	slide.CSld = pml.NewCT_CommonSlideData()
@@ -363,7 +365,7 @@ func (p *Presentation) AddDefaultSlideWithLayout(l SlideLayout) (Slide, error) {
 		// and drop some of the placeholders (footer, slide date/time, slide number)
 		switch ph.Type() {
 		case pml.ST_PlaceholderTypeFtr, pml.ST_PlaceholderTypeDt, pml.ST_PlaceholderTypeSldNum:
-			ph.Remove()
+			_ = ph.Remove()
 		}
 	}
 
@@ -379,7 +381,7 @@ func (p *Presentation) Save(w io.Writer) error {
 	dt := unioffice.DocTypePresentation
 
 	z := zip.NewWriter(w)
-	defer z.Close()
+	defer func() { _ = z.Close() }()
 	if err := zippkg.MarshalXML(z, unioffice.BaseRelsFilename, p.Rels.X()); err != nil {
 		return err
 	}
@@ -416,34 +418,50 @@ func (p *Presentation) Save(w io.Writer) error {
 
 	for i, slide := range p.slides {
 		spath := unioffice.AbsoluteFilename(unioffice.DocTypePresentation, unioffice.SlideType, i+1)
-		zippkg.MarshalXML(z, spath, slide)
+		if err := zippkg.MarshalXML(z, spath, slide); err != nil {
+			return err
+		}
 		if !p.slideRels[i].IsEmpty() {
 			rpath := zippkg.RelationsPathFor(spath)
-			zippkg.MarshalXML(z, rpath, p.slideRels[i].X())
+			if err := zippkg.MarshalXML(z, rpath, p.slideRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 	for i, m := range p.masters {
 		mpath := unioffice.AbsoluteFilename(unioffice.DocTypePresentation, unioffice.SlideMasterType, i+1)
-		zippkg.MarshalXML(z, mpath, m)
+		if err := zippkg.MarshalXML(z, mpath, m); err != nil {
+			return err
+		}
 		if !p.masterRels[i].IsEmpty() {
 			rpath := zippkg.RelationsPathFor(mpath)
-			zippkg.MarshalXML(z, rpath, p.masterRels[i].X())
+			if err := zippkg.MarshalXML(z, rpath, p.masterRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 	for i, l := range p.layouts {
 		mpath := unioffice.AbsoluteFilename(unioffice.DocTypePresentation, unioffice.SlideLayoutType, i+1)
-		zippkg.MarshalXML(z, mpath, l)
+		if err := zippkg.MarshalXML(z, mpath, l); err != nil {
+			return err
+		}
 		if !p.layoutRels[i].IsEmpty() {
 			rpath := zippkg.RelationsPathFor(mpath)
-			zippkg.MarshalXML(z, rpath, p.layoutRels[i].X())
+			if err := zippkg.MarshalXML(z, rpath, p.layoutRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 	for i, l := range p.themes {
 		mpath := unioffice.AbsoluteFilename(unioffice.DocTypePresentation, unioffice.ThemeType, i+1)
-		zippkg.MarshalXML(z, mpath, l)
+		if err := zippkg.MarshalXML(z, mpath, l); err != nil {
+			return err
+		}
 		if !p.themeRels[i].IsEmpty() {
 			rpath := zippkg.RelationsPathFor(mpath)
-			zippkg.MarshalXML(z, rpath, p.themeRels[i].X())
+			if err := zippkg.MarshalXML(z, rpath, p.themeRels[i].X()); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -474,7 +492,7 @@ func (p *Presentation) SaveToFile(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return p.Save(f)
 }
 
@@ -590,7 +608,7 @@ func (p *Presentation) onNewRelationship(decMap *zippkg.DecodeMap, target, typ s
 					return fmt.Errorf("error reading thumbnail: %s", err)
 				}
 				p.Thumbnail, _, err = image.Decode(rc)
-				rc.Close()
+				_ = rc.Close()
 				if err != nil {
 					return fmt.Errorf("error decoding thumbnail: %s", err)
 				}

@@ -33,7 +33,7 @@ func BenchmarkSave(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		buf := bytes.Buffer{}
-		doc.Save(&buf)
+		_ = doc.Save(&buf)
 	}
 }
 
@@ -45,7 +45,7 @@ func BenchmarkOpen(b *testing.B) {
 		run.AddText("test")
 	}
 	buf := bytes.Buffer{}
-	doc.Save(&buf)
+	_ = doc.Save(&buf)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = document.Read(bytes.NewReader(buf.Bytes()), int64(buf.Len()))

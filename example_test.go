@@ -10,7 +10,7 @@ func Example_document() {
 	// for more examples
 	doc := document.New()
 	doc.AddParagraph().AddRun().AddText("Hello World!")
-	doc.SaveToFile("document.docx")
+	_ = doc.SaveToFile("document.docx")
 }
 
 func Example_spreadsheeet() {
@@ -20,5 +20,5 @@ func Example_spreadsheeet() {
 	sheet := ss.AddSheet()
 	sheet.AddRow().AddCell().SetString("Hello")
 	sheet.Cell("B1").SetString("World!")
-	ss.SaveToFile("workbook.xlsx")
+	_ = ss.SaveToFile("workbook.xlsx")
 }

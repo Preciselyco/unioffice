@@ -17,7 +17,7 @@ func TestStylesUnmarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error reading content types file")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dec := xml.NewDecoder(f)
 	r := document.NewStyles()
 	if err := dec.Decode(r.X()); err != nil {
@@ -38,7 +38,7 @@ func TestStylesList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error reading content types file")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dec := xml.NewDecoder(f)
 	r := document.NewStyles()
 	if err := dec.Decode(r.X()); err != nil {
