@@ -27,7 +27,7 @@ func (cmd *DumpXmlCmd) Run() error {
 	if err != nil {
 		return err
 	}
-	defer zipReader.Close()
+	defer func() { _ = zipReader.Close() }()
 
 	// Sort list of files to make it diffable
 	sort.Slice(zipReader.File, func(i, j int) bool { return zipReader.File[i].Name < zipReader.File[j].Name })
@@ -60,7 +60,7 @@ func (cmd *DumpXmlCmd) DumpFile(file *zip.File) error {
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
