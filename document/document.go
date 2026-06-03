@@ -483,6 +483,18 @@ func (d *Document) StructuredDocumentTags() []StructuredDocumentTag {
 	return ret
 }
 
+// AddStructuredDocumentTag adds a new block-level structured document tag
+// (content control) to the document body and returns a wrapper for it.
+func (d *Document) AddStructuredDocumentTag() StructuredDocumentTag {
+	elts := wml.NewEG_BlockLevelElts()
+	d.x.Body.EG_BlockLevelElts = append(d.x.Body.EG_BlockLevelElts, elts)
+	c := wml.NewEG_ContentBlockContent()
+	elts.EG_ContentBlockContent = append(elts.EG_ContentBlockContent, c)
+	sdt := wml.NewCT_SdtBlock()
+	c.Sdt = sdt
+	return StructuredDocumentTag{d, sdt}
+}
+
 // Paragraphs returns all of the paragraphs in the document body including tables.
 func (d *Document) Paragraphs() []Paragraph {
 	ret := []Paragraph{}
