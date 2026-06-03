@@ -29,8 +29,8 @@ func (m *CT_CommentEx) MarshalXML(e *xml.Encoder, start xml.StartElement) error 
 	if m.DoneAttr != nil {
 		start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "w12:done"}, Value: fmt.Sprintf("%v", *m.DoneAttr)})
 	}
-	e.EncodeToken(start)
-	e.EncodeToken(xml.EndElement{Name: start.Name})
+	_ = e.EncodeToken(start)
+	_ = e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
 

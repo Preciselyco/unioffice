@@ -62,7 +62,7 @@ func Open(filename string) (*Workbook, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening %s: %s", filename, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	fi, err := os.Stat(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error opening %s: %s", filename, err)

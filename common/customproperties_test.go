@@ -193,7 +193,7 @@ func TestCustomPropertiesXMLRoundTrip(t *testing.T) {
 	if err := enc.Encode(cp.X()); err != nil {
 		t.Fatalf("error marshaling custom properties: %s", err)
 	}
-	enc.Flush()
+	_ = enc.Flush()
 
 	// Unmarshal
 	cp2 := common.NewCustomProperties()

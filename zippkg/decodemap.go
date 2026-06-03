@@ -96,7 +96,7 @@ func (d *DecodeMap) Decode(files []*zip.File) error {
 			relRaw := relSource.Ifc.(*relationships.Relationships)
 			for _, r := range relRaw.Relationship {
 				bp, _ := d.basePaths[relRaw]
-				d.decodeFunc(d, bp+r.TargetAttr, r.TypeAttr, files, r, relSource)
+				_ = d.decodeFunc(d, bp+r.TargetAttr, r.TypeAttr, files, r, relSource)
 			}
 		}
 

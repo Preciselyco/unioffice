@@ -124,5 +124,5 @@ func ExampleCoreProperties() {
 	cp.SetLastModifiedBy("Jane Smith")
 	cp.SetCreated(time.Now())
 	cp.SetModified(time.Now())
-	doc.SaveToFile("document.docx")
+	_ = doc.SaveToFile("document.docx")
 }

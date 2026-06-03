@@ -68,8 +68,8 @@ func main() {
 					if err != nil {
 						log.Fatalf("error copying image: %s", err)
 					}
-					f.Close()
-					dst.Close()
+					_ = f.Close()
+					_ = dst.Close()
 					// and add a markdown reference to it
 					fmt.Printf("\n![%s](%s)\n", fn, fn)
 				}

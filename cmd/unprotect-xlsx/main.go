@@ -30,26 +30,28 @@ func main() {
 	// just print out some info on what is protected
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 	if pwh := prot.PasswordHash(); pwh != "" {
-		fmt.Fprintf(tw, "password hash\t%v\n", pwh)
+		_, _ = fmt.Fprintf(tw, "password hash\t%v\n", pwh)
 	}
-	fmt.Fprintf(tw, "locked structure\t%v\n", prot.IsStructureLocked())
-	fmt.Fprintf(tw, "locked windows\t%v\n", prot.IsWindowLocked())
+	_, _ = fmt.Fprintf(tw, "locked structure\t%v\n", prot.IsStructureLocked())
+	_, _ = fmt.Fprintf(tw, "locked windows\t%v\n", prot.IsWindowLocked())
 	for _, s := range wb.Sheets() {
-		fmt.Fprintf(tw, "Sheet '%s'\n", s.Name())
+		_, _ = fmt.Fprintf(tw, "Sheet '%s'\n", s.Name())
 		sp := s.Protection()
 		if pwh := sp.PasswordHash(); pwh != "" {
-			fmt.Fprintf(tw, " - password hash\t%v\n", pwh)
+			_, _ = fmt.Fprintf(tw, " - password hash\t%v\n", pwh)
 		}
-		fmt.Fprintf(tw, " - sheet locked\t%v\n", sp.IsSheetLocked())
-		fmt.Fprintf(tw, " - objects locked\t%v\n", sp.IsObjectLocked())
+		_, _ = fmt.Fprintf(tw, " - sheet locked\t%v\n", sp.IsSheetLocked())
+		_, _ = fmt.Fprintf(tw, " - objects locked\t%v\n", sp.IsObjectLocked())
 
 		s.ClearProtection()
 	}
-	tw.Flush()
+	_ = tw.Flush()
 
 	// then clear protection and resave the workbook
 	wb.ClearProtection()
 	op := strings.Replace(fn, filepath.Ext(fn), "-unprotected.xlsx", 1)
 	fmt.Println("saving unprotected workbook to", op)
-	wb.SaveToFile(op)
+	if err := wb.SaveToFile(op); err != nil {
+		log.Fatalf("error saving: %s", err)
+	}
 }

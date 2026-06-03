@@ -17,5 +17,5 @@ import (
 func TestParseUnionST_AdjCoordinate(t *testing.T) {
 	// this crashed due to a null pointer dereferences when not initializing the
 	// returned value correctly
-	dml.ParseUnionST_AdjCoordinate("123")
+	_, _ = dml.ParseUnionST_AdjCoordinate("123")
 }

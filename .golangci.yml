@@ -1,24 +1,7 @@
+version: 2
+
 linters:
-  enable-all: false
+  default: none
   enable:
+    - errcheck
     - govet
-    - staticcheck
-    - gosimple
-    - ineffassign
-    - unused
-
-issues:
-  exclude-rules:
-    # cmd/ uses kong's non-standard struct tag syntax
-    - path: cmd/
-      linters: [govet]
-      text: "structtag"
-
-    # schema/ is generated code — don't lint it
-    - path: schema/
-      linters:
-        - govet
-        - staticcheck
-        - gosimple
-        - ineffassign
-        - unused

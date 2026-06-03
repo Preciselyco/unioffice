@@ -28,18 +28,18 @@ func (c *Container) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:o"}, Value: "urn:schemas-microsoft-com:office:office"})
 	start.Attr = append(start.Attr, xml.Attr{Name: xml.Name{Local: "xmlns:x"}, Value: "urn:schemas-microsoft-com:office:excel"})
 	start.Name.Local = "xml"
-	e.EncodeToken(start)
+	_ = e.EncodeToken(start)
 	if c.Layout != nil {
 		se := xml.StartElement{Name: xml.Name{Local: "o:shapelayout"}}
-		e.EncodeElement(c.Layout, se)
+		_ = e.EncodeElement(c.Layout, se)
 	}
 	if c.ShapeType != nil {
 		se := xml.StartElement{Name: xml.Name{Local: "v:shapetype"}}
-		e.EncodeElement(c.ShapeType, se)
+		_ = e.EncodeElement(c.ShapeType, se)
 	}
 	for _, s := range c.Shape {
 		se := xml.StartElement{Name: xml.Name{Local: "v:shape"}}
-		e.EncodeElement(s, se)
+		_ = e.EncodeElement(s, se)
 	}
 	return e.EncodeToken(xml.EndElement{Name: start.Name})
 }

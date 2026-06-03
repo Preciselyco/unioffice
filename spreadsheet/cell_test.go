@@ -226,7 +226,7 @@ func TestCellTimeFormat(t *testing.T) {
 		delta := exp.Sub(got)
 		t.Errorf("precision error in date: %s", delta)
 	}
-	wb.SaveToFile("/tmp/future.xlsx")
+	_ = wb.SaveToFile("/tmp/future.xlsx")
 }
 
 func TestCellDateFormat(t *testing.T) {
@@ -244,5 +244,5 @@ func TestCellDateFormat(t *testing.T) {
 		delta := exp.Sub(got)
 		t.Errorf("precision error in date: %s", delta)
 	}
-	wb.SaveToFile("/tmp/future.xlsx")
+	_ = wb.SaveToFile("/tmp/future.xlsx")
 }

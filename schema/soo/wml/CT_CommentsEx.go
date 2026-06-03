@@ -20,14 +20,14 @@ func NewCT_CommentsEx() *CT_CommentsEx {
 }
 
 func (m *CT_CommentsEx) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	e.EncodeToken(start)
+	_ = e.EncodeToken(start)
 	if m.CommentEx != nil {
 		commentStart := xml.StartElement{Name: xml.Name{Local: "w12:commentEx"}}
 		for _, c := range m.CommentEx {
-			e.EncodeElement(c, commentStart)
+			_ = e.EncodeElement(c, commentStart)
 		}
 	}
-	e.EncodeToken(xml.EndElement{Name: start.Name})
+	_ = e.EncodeToken(xml.EndElement{Name: start.Name})
 	return nil
 }
 

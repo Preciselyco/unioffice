@@ -99,7 +99,7 @@ func ImageFromFile(path string) (Image, error) {
 	if err != nil {
 		return r, fmt.Errorf("error reading image: %s", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	imgDec, ifmt, err := image.Decode(f)
 	if err != nil {
 		return r, fmt.Errorf("unable to parse image: %s", err)

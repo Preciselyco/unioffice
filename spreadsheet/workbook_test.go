@@ -23,7 +23,7 @@ import (
 
 func TestSimpleWorkbook(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	sheet := wb.AddSheet()
 	sheet.Cell("A1").SetString("Hello World!")
 
@@ -31,13 +31,15 @@ func TestSimpleWorkbook(t *testing.T) {
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid sheet: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "simple-2.xlsx", got.Bytes())
 }
 
 func TestConstructor(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if wb == nil {
 		t.Errorf("expected a non-nil workbook")
 	}
@@ -82,7 +84,7 @@ func TestWorkbookUnmarshal(t *testing.T) {
 
 func TestSimpleSheet(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	sheet := wb.AddSheet()
 	row := sheet.AddRow()
 	cell := row.AddCell()
@@ -91,7 +93,9 @@ func TestSimpleSheet(t *testing.T) {
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid spreadsheet: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareGoldenZip(t, "simple-1.xlsx", got.Bytes())
 }
 func TestOpen(t *testing.T) {
@@ -99,13 +103,15 @@ func TestOpen(t *testing.T) {
 	if err != nil {
 		t.Errorf("error opening workbook: %s", err)
 	}
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 
 	got := bytes.Buffer{}
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid spreadsheet: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	testhelper.CompareZip(t, "simple-1.xlsx", got.Bytes(), true)
 }
 
@@ -114,13 +120,15 @@ func TestOpenExcel2016(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 
 	got := bytes.Buffer{}
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid spreadsheet: %s", err)
 	}
-	wb.Save(&got)
+	if err := wb.Save(&got); err != nil {
+		t.Fatalf("Save: %s", err)
+	}
 	//testhelper.CompareZip(t, "../../testdata/Office2016/Excel-Windows.xlsx", got.Bytes())
 }
 
@@ -129,7 +137,7 @@ func TestSheetCount(t *testing.T) {
 	if err := wb.Validate(); err != nil {
 		t.Errorf("created an invalid spreadsheet: %s", err)
 	}
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if wb.SheetCount() != 0 {
 		t.Errorf("expected 0 sheets, got %d", wb.SheetCount())
 	}
@@ -198,7 +206,7 @@ func TestPreserveSpace(t *testing.T) {
 
 func TestAddDefinedName(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if len(wb.DefinedNames()) != 0 {
 		t.Errorf("expeced no defined names on new wb")
 	}
@@ -218,7 +226,7 @@ func TestAddDefinedName(t *testing.T) {
 
 func ExampleWorkbook_AddDefinedName() {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	sheet := wb.AddSheet()
 	productNames := wb.AddDefinedName("ProductNames", sheet.RangeReference("A2:A6"))
 	// now 'ProductNames' can be used in formulas, charts, etc.
@@ -228,7 +236,7 @@ func ExampleWorkbook_AddDefinedName() {
 
 func TestOpenComments(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/comments.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
@@ -244,7 +252,7 @@ func TestOpenComments(t *testing.T) {
 }
 func TestWorkbookProtection(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if wb.X().WorkbookProtection != nil {
 		t.Errorf("expected no protection for new workbook")
 	}
@@ -260,7 +268,7 @@ func TestWorkbookProtection(t *testing.T) {
 
 func TestSheetGetName(t *testing.T) {
 	wb := spreadsheet.New()
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	s := wb.AddSheet()
 	if _, err := wb.GetSheet("foo"); err == nil {
 		t.Errorf("expected an error")
@@ -273,7 +281,7 @@ func TestSheetGetName(t *testing.T) {
 // TestOpenOrderedSheets test for issue #154 where sheet title didn't match sheet content.
 func TestOpenOrderedSheets(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/ordered-sheets.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
@@ -293,7 +301,7 @@ func TestOpenOrderedSheets(t *testing.T) {
 
 func TestRemoveSheet(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/sheets.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
@@ -319,7 +327,7 @@ func TestRemoveSheet(t *testing.T) {
 
 func TestRemoveSheetByName(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/sheets.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
@@ -345,7 +353,7 @@ func TestRemoveSheetByName(t *testing.T) {
 
 func TestCopySheet(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/sheets.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
@@ -376,7 +384,7 @@ func TestCopySheet(t *testing.T) {
 
 func TestCopySheetByName(t *testing.T) {
 	wb, err := spreadsheet.Open("./testdata/sheets.xlsx")
-	defer wb.Close()
+	defer func() { _ = wb.Close() }()
 	if err != nil {
 		t.Fatalf("error opening workbook: %s", err)
 	}
