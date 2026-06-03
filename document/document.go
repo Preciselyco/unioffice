@@ -469,18 +469,83 @@ func (d *Document) RemoveParagraph(p Paragraph) {
 	}
 }
 
-// StructuredDocumentTags returns the structured document tags in the document
-// which are commonly used in document templates.
+// StructuredDocumentTags returns the structured document tags in the document,
+// in document order. Both block-level controls (CT_SdtBlock) and run-level /
+// inline controls (CT_SdtRun, e.g. those produced when another editor
+// down-converts a block control) are returned.
 func (d *Document) StructuredDocumentTags() []StructuredDocumentTag {
 	ret := []StructuredDocumentTag{}
+	if d.x.Body == nil {
+		return ret
+	}
 	for _, ble := range d.x.Body.EG_BlockLevelElts {
 		for _, c := range ble.EG_ContentBlockContent {
-			if c.Sdt != nil {
-				ret = append(ret, StructuredDocumentTag{d, c.Sdt})
-			}
+			d.collectSDTs(c, &ret)
 		}
 	}
 	return ret
+}
+
+// collectSDTs appends every content control found within one block-content
+// element: the block-level control itself (if any), run-level controls in
+// loose paragraphs, and controls inside table cells.
+func (d *Document) collectSDTs(c *wml.EG_ContentBlockContent, ret *[]StructuredDocumentTag) {
+	d.collectBlockSDTs(c.Sdt, c.P, c.Tbl, ret)
+}
+
+// collectBlockSDTs processes a block-level content container — an optional
+// block SDT plus loose paragraphs and tables — appending every content control
+// found. It recurses into a block SDT's own content (so nested block SDTs,
+// run-level controls in its paragraphs, and tables within it are reached) and
+// into table cells.
+func (d *Document) collectBlockSDTs(sdt *wml.CT_SdtBlock, paras []*wml.CT_P, tbls []*wml.CT_Tbl, ret *[]StructuredDocumentTag) {
+	if sdt != nil {
+		*ret = append(*ret, StructuredDocumentTag{d: d, x: sdt})
+		if sc := sdt.SdtContent; sc != nil {
+			d.collectBlockSDTs(sc.Sdt, sc.P, sc.Tbl, ret)
+		}
+	}
+	for _, p := range paras {
+		d.collectRunSDTs(p, ret)
+	}
+	for _, tbl := range tbls {
+		for _, rc := range tbl.EG_ContentRowContent {
+			for _, row := range rc.Tr {
+				for _, cc := range row.EG_ContentCellContent {
+					for _, tc := range cc.Tc {
+						for _, ble := range tc.EG_BlockLevelElts {
+							for _, cbc := range ble.EG_ContentBlockContent {
+								d.collectSDTs(cbc, ret)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// collectRunSDTs appends run-level (inline) controls found within a paragraph.
+func (d *Document) collectRunSDTs(p *wml.CT_P, ret *[]StructuredDocumentTag) {
+	for _, pc := range p.EG_PContent {
+		for _, crc := range pc.EG_ContentRunContent {
+			if crc.Sdt != nil {
+				*ret = append(*ret, StructuredDocumentTag{d: d, run: crc.Sdt})
+			}
+		}
+	}
+}
+
+// AddStructuredDocumentTag adds a new block-level structured document tag
+// (content control) to the document body and returns a wrapper for it.
+func (d *Document) AddStructuredDocumentTag() StructuredDocumentTag {
+	elts := wml.NewEG_BlockLevelElts()
+	d.x.Body.EG_BlockLevelElts = append(d.x.Body.EG_BlockLevelElts, elts)
+	c := wml.NewEG_ContentBlockContent()
+	elts.EG_ContentBlockContent = append(elts.EG_ContentBlockContent, c)
+	sdt := wml.NewCT_SdtBlock()
+	c.Sdt = sdt
+	return StructuredDocumentTag{d: d, x: sdt}
 }
 
 // Paragraphs returns all of the paragraphs in the document body including tables.
