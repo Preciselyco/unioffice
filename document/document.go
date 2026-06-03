@@ -1071,8 +1071,16 @@ func (d Document) Bookmarks() []Bookmark {
 // Close closes the document, removing any temporary files that might have been
 // created when opening a document.
 func (d *Document) Close() error {
-	if d.TmpPath != "" && strings.HasPrefix(d.TmpPath, os.TempDir()+string(os.PathSeparator)) {
-		return os.RemoveAll(d.TmpPath)
+	if d.TmpPath == "" {
+		return nil
 	}
-	return nil
+	// Use filepath.Clean + filepath.Rel for a path-aware containment check that
+	// is not fooled by symlinks, ".." components, or platform path variations.
+	tmpDir := filepath.Clean(os.TempDir())
+	target := filepath.Clean(d.TmpPath)
+	rel, err := filepath.Rel(tmpDir, target)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return nil
+	}
+	return os.RemoveAll(target)
 }

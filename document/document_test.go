@@ -9,7 +9,6 @@ package document_test
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -521,40 +520,30 @@ func TestCloseOnlyRemovesTempDir(t *testing.T) {
 // directory when parsing fails, so callers that receive (nil, err) do not leak
 // the directory.
 func TestReadCleansUpTmpDirOnError(t *testing.T) {
-	// Snapshot gooxml-docx* entries in the system temp dir before the call.
-	before := tmpDocxDirs(t)
+	// Use a test-local temp root to avoid flakes from concurrent processes
+	// creating gooxml-docx* directories in the system temp dir.
+	isolated := t.TempDir()
+	t.Setenv("TMPDIR", isolated) // Linux/macOS
+	t.Setenv("TMP", isolated)    // Windows
+	t.Setenv("TEMP", isolated)   // Windows
 
 	_, err := document.ReadFromBytes([]byte("this is not a valid zip"))
 	if err == nil {
 		t.Fatal("expected ReadFromBytes to fail on invalid input")
 	}
 
-	after := tmpDocxDirs(t)
-
-	// Any gooxml-docx* directory that appeared during the call should be gone.
-	for dir := range after {
-		if !before[dir] {
-			t.Errorf("temp directory %q was not cleaned up after Read error", dir)
-		}
+	// Any temp directory created under our isolated root should have been removed.
+	entries, readErr := os.ReadDir(isolated)
+	if readErr != nil {
+		t.Fatalf("cannot read isolated temp dir: %v", readErr)
 	}
-}
-
-// tmpDocxDirs returns the set of gooxml-docx* directory names present in
-// os.TempDir().
-func tmpDocxDirs(t *testing.T) map[string]bool {
-	t.Helper()
-	entries, err := os.ReadDir(os.TempDir())
-	if err != nil {
-		t.Fatalf("cannot read temp dir: %v", err)
-	}
-	dirs := map[string]bool{}
 	for _, e := range entries {
 		if e.IsDir() && strings.HasPrefix(e.Name(), "gooxml-docx") {
-			dirs[e.Name()] = true
+			t.Errorf("temp directory %q was not cleaned up after Read error", e.Name())
 		}
 	}
-	return dirs
 }
+
 
 // TestSetFontTableRoundTrip verifies that FontTable/SetFontTable preserve the
 // *wml.Fonts pointer and that EnsureFontTableRel adds the expected relationship.
@@ -576,26 +565,19 @@ func TestSetFontTableRoundTrip(t *testing.T) {
 	dst.SetFontTable(src.FontTable())
 	dst.EnsureFontTableRel()
 
-	// Verify the relationship exists by saving and checking the zip contents.
+	// Verify EnsureFontTableRel wired up the relationship by round-tripping
+	// through Save+ReadFromBytes: if the relationship is missing the font table
+	// won't be loaded back and FontTable() will be nil.
 	var buf bytes.Buffer
 	if err := dst.Save(&buf); err != nil {
 		t.Fatalf("Save failed: %v", err)
 	}
-	contents := buf.String()
-	if !strings.Contains(contents, "fontTable") {
-		t.Error("saved document does not reference fontTable")
+	reopened, err := document.ReadFromBytes(buf.Bytes())
+	if err != nil {
+		t.Fatalf("ReadFromBytes after Save failed: %v", err)
+	}
+	if reopened.FontTable() == nil {
+		t.Error("FontTable() is nil after Save+ReadFromBytes: EnsureFontTableRel did not wire up the relationship")
 	}
 }
 
-// TestSetFontTableDocstringWarning is a compile-time documentation test: it
-// calls SetFontTable with a value from another document to confirm the API
-// exists and accepts the right type, and documents via fmt.Sprintf that the
-// caller is responsible for copying ExtraFiles.
-func TestSetFontTableAPIExists(t *testing.T) {
-	src := document.New()
-	src.SetFontTable(wml.NewFonts())
-	dst := document.New()
-	dst.SetFontTable(src.FontTable())
-	// Embedded font binaries are in src.ExtraFiles and must be copied separately.
-	_ = fmt.Sprintf("ExtraFiles to copy: %d", len(src.ExtraFiles))
-}
