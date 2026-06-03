@@ -20,7 +20,8 @@ jobs:
         run: go build ./...
 
       - name: Vet
-        run: go vet ./...
+        # cmd/ uses kong's non-standard struct tag syntax which go vet rejects
+        run: go vet $(go list ./... | grep -v '/cmd/')
 
       - name: Test
         run: go test ./...
