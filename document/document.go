@@ -487,22 +487,28 @@ func (d *Document) StructuredDocumentTags() []StructuredDocumentTag {
 }
 
 // collectSDTs appends every content control found within one block-content
-// element: the block-level control itself (if any), run-level controls nested
-// inside its content paragraphs, run-level controls in loose paragraphs, and
-// controls inside table cells. Recurses so nested controls are reached.
+// element: the block-level control itself (if any), run-level controls in
+// loose paragraphs, and controls inside table cells.
 func (d *Document) collectSDTs(c *wml.EG_ContentBlockContent, ret *[]StructuredDocumentTag) {
-	if c.Sdt != nil {
-		*ret = append(*ret, StructuredDocumentTag{d: d, x: c.Sdt})
-		if c.Sdt.SdtContent != nil {
-			for _, p := range c.Sdt.SdtContent.P {
-				d.collectRunSDTs(p, ret)
-			}
+	d.collectBlockSDTs(c.Sdt, c.P, c.Tbl, ret)
+}
+
+// collectBlockSDTs processes a block-level content container — an optional
+// block SDT plus loose paragraphs and tables — appending every content control
+// found. It recurses into a block SDT's own content (so nested block SDTs,
+// run-level controls in its paragraphs, and tables within it are reached) and
+// into table cells.
+func (d *Document) collectBlockSDTs(sdt *wml.CT_SdtBlock, paras []*wml.CT_P, tbls []*wml.CT_Tbl, ret *[]StructuredDocumentTag) {
+	if sdt != nil {
+		*ret = append(*ret, StructuredDocumentTag{d: d, x: sdt})
+		if sc := sdt.SdtContent; sc != nil {
+			d.collectBlockSDTs(sc.Sdt, sc.P, sc.Tbl, ret)
 		}
 	}
-	for _, p := range c.P {
+	for _, p := range paras {
 		d.collectRunSDTs(p, ret)
 	}
-	for _, tbl := range c.Tbl {
+	for _, tbl := range tbls {
 		for _, rc := range tbl.EG_ContentRowContent {
 			for _, row := range rc.Tr {
 				for _, cc := range row.EG_ContentCellContent {

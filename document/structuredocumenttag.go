@@ -44,21 +44,36 @@ func (s StructuredDocumentTag) pr() *wml.CT_SdtPr {
 	return nil
 }
 
-// ensurePr ensures that the SdtPr (properties) struct is initialised on the
-// wrapped block control. Only called from the block-only writer path.
-func (s StructuredDocumentTag) ensurePr() {
-	if s.x.SdtPr == nil {
-		s.x.SdtPr = wml.NewCT_SdtPr()
+// ensurePr ensures the SdtPr (properties) struct is initialised on whichever
+// control kind is wrapped and returns it. Returns nil only when neither a
+// block nor a run control is set.
+func (s StructuredDocumentTag) ensurePr() *wml.CT_SdtPr {
+	switch {
+	case s.x != nil:
+		if s.x.SdtPr == nil {
+			s.x.SdtPr = wml.NewCT_SdtPr()
+		}
+		return s.x.SdtPr
+	case s.run != nil:
+		if s.run.SdtPr == nil {
+			s.run.SdtPr = wml.NewCT_SdtPr()
+		}
+		return s.run.SdtPr
 	}
+	return nil
 }
 
-// SetTag sets the machine-readable tag on the structured document tag.
+// SetTag sets the machine-readable tag on the structured document tag. Works
+// for both block-level and run-level controls.
 func (s StructuredDocumentTag) SetTag(tag string) {
-	s.ensurePr()
-	if s.x.SdtPr.Tag == nil {
-		s.x.SdtPr.Tag = wml.NewCT_String()
+	pr := s.ensurePr()
+	if pr == nil {
+		return
 	}
-	s.x.SdtPr.Tag.ValAttr = tag
+	if pr.Tag == nil {
+		pr.Tag = wml.NewCT_String()
+	}
+	pr.Tag.ValAttr = tag
 }
 
 // Tag returns the machine-readable tag of the structured document tag,
@@ -71,13 +86,17 @@ func (s StructuredDocumentTag) Tag() string {
 	return pr.Tag.ValAttr
 }
 
-// SetAlias sets the human-readable title (alias) of the structured document tag.
+// SetAlias sets the human-readable title (alias) of the structured document
+// tag. Works for both block-level and run-level controls.
 func (s StructuredDocumentTag) SetAlias(alias string) {
-	s.ensurePr()
-	if s.x.SdtPr.Alias == nil {
-		s.x.SdtPr.Alias = wml.NewCT_String()
+	pr := s.ensurePr()
+	if pr == nil {
+		return
 	}
-	s.x.SdtPr.Alias.ValAttr = alias
+	if pr.Alias == nil {
+		pr.Alias = wml.NewCT_String()
+	}
+	pr.Alias.ValAttr = alias
 }
 
 // Alias returns the human-readable title of the structured document tag,
@@ -90,8 +109,14 @@ func (s StructuredDocumentTag) Alias() string {
 	return pr.Alias.ValAttr
 }
 
-// AddParagraph adds a new paragraph inside the structured document tag's content.
+// AddParagraph adds a new paragraph inside the structured document tag's
+// content. This is a block-level operation: a run-level (inline) control holds
+// runs rather than paragraphs, so calling AddParagraph on one is unsupported
+// and returns a zero Paragraph rather than panicking.
 func (s StructuredDocumentTag) AddParagraph() Paragraph {
+	if s.x == nil {
+		return Paragraph{}
+	}
 	if s.x.SdtContent == nil {
 		s.x.SdtContent = wml.NewCT_SdtContentBlock()
 	}
