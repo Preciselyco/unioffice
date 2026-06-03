@@ -10,6 +10,8 @@ package document_test
 import (
 	"bytes"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -502,3 +504,98 @@ func TestComments(t *testing.T) {
 	recoded := recodeDocx(t, got.Bytes())
 	testhelper.CompareGoldenZip(t, "comments.docx", recoded)
 }
+
+// TestCloseOnlyRemovesTempDir verifies that Close() does not delete directories
+// whose path merely starts with os.TempDir() but are not under it (e.g.
+// "/tmpfoo/..." on Linux where os.TempDir() == "/tmp").
+func TestCloseOnlyRemovesTempDir(t *testing.T) {
+	// Create a directory that shares the temp-dir prefix but is a sibling, not
+	// a child.  On Linux this is e.g. /tmp + "foo" = /tmpfoo.
+	// We use a real subdirectory under the real temp dir so the test works on
+	// all platforms (Windows, macOS) without needing root or special paths.
+	// The important thing is to verify the HasPrefix+separator guard: we set
+	// TmpPath to a path that does NOT have os.TempDir()+separator as a prefix
+	// and confirm it is left alone.
+	outsideDir := filepath.Join(os.TempDir()+"suffix_test", "gooxml-close-test")
+	if err := os.MkdirAll(outsideDir, 0o700); err != nil {
+		t.Skipf("cannot create test directory %s: %v", outsideDir, err)
+	}
+	defer func() { _ = os.RemoveAll(filepath.Dir(outsideDir)) }()
+
+	doc := document.New()
+	doc.TmpPath = outsideDir
+
+	if err := doc.Close(); err != nil {
+		t.Fatalf("Close() returned unexpected error: %v", err)
+	}
+
+	if _, err := os.Stat(outsideDir); os.IsNotExist(err) {
+		t.Errorf("Close() deleted %q which is not under os.TempDir()", outsideDir)
+	}
+}
+
+// TestReadCleansUpTmpDirOnError verifies that Read() removes its temporary
+// directory when parsing fails, so callers that receive (nil, err) do not leak
+// the directory.
+func TestReadCleansUpTmpDirOnError(t *testing.T) {
+	// Use a test-local temp root to avoid flakes from concurrent processes
+	// creating gooxml-docx* directories in the system temp dir.
+	isolated := t.TempDir()
+	t.Setenv("TMPDIR", isolated) // Linux/macOS
+	t.Setenv("TMP", isolated)    // Windows
+	t.Setenv("TEMP", isolated)   // Windows
+
+	_, err := document.ReadFromBytes([]byte("this is not a valid zip"))
+	if err == nil {
+		t.Fatal("expected ReadFromBytes to fail on invalid input")
+	}
+
+	// Any temp directory created under our isolated root should have been removed.
+	entries, readErr := os.ReadDir(isolated)
+	if readErr != nil {
+		t.Fatalf("cannot read isolated temp dir: %v", readErr)
+	}
+	for _, e := range entries {
+		if e.IsDir() && strings.HasPrefix(e.Name(), "gooxml-docx") {
+			t.Errorf("temp directory %q was not cleaned up after Read error", e.Name())
+		}
+	}
+}
+
+
+// TestSetFontTableRoundTrip verifies that FontTable/SetFontTable preserve the
+// *wml.Fonts pointer and that EnsureFontTableRel adds the expected relationship.
+func TestSetFontTableRoundTrip(t *testing.T) {
+	src := document.New()
+	// FontTable is nil on a freshly constructed document.
+	if src.FontTable() != nil {
+		t.Fatal("expected nil FontTable on new document")
+	}
+
+	fonts := wml.NewFonts()
+	src.SetFontTable(fonts)
+	if src.FontTable() != fonts {
+		t.Error("SetFontTable/FontTable round-trip failed: pointer mismatch")
+	}
+
+	// Transfer to a second document and ensure the relationship is wired up.
+	dst := document.New()
+	dst.SetFontTable(src.FontTable())
+	dst.EnsureFontTableRel()
+
+	// Verify EnsureFontTableRel wired up the relationship by round-tripping
+	// through Save+ReadFromBytes: if the relationship is missing the font table
+	// won't be loaded back and FontTable() will be nil.
+	var buf bytes.Buffer
+	if err := dst.Save(&buf); err != nil {
+		t.Fatalf("Save failed: %v", err)
+	}
+	reopened, err := document.ReadFromBytes(buf.Bytes())
+	if err != nil {
+		t.Fatalf("ReadFromBytes after Save failed: %v", err)
+	}
+	if reopened.FontTable() == nil {
+		t.Error("FontTable() is nil after Save+ReadFromBytes: EnsureFontTableRel did not wire up the relationship")
+	}
+}
+

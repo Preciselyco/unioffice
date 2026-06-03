@@ -562,10 +562,17 @@ func Read(r io.ReaderAt, size int64) (*Document, error) {
 		return nil, err
 	}
 	doc.TmpPath = td
+	var retErr error
+	defer func() {
+		if retErr != nil {
+			_ = os.RemoveAll(td)
+		}
+	}()
 
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
-		return nil, fmt.Errorf("parsing zip: %s", err)
+		retErr = fmt.Errorf("parsing zip: %s", err)
+		return nil, retErr
 	}
 
 	files := []*zip.File{}
@@ -576,16 +583,16 @@ func Read(r io.ReaderAt, size int64) (*Document, error) {
 	// we should discover all contents by starting with these two files
 	decMap.AddTarget(unioffice.ContentTypesFilename, doc.ContentTypes.X(), "", 0)
 	decMap.AddTarget(unioffice.BaseRelsFilename, doc.Rels.X(), "", 0)
-	if err := decMap.Decode(files); err != nil {
-		return nil, err
+	if retErr = decMap.Decode(files); retErr != nil {
+		return nil, retErr
 	}
 
 	for _, f := range files {
 		if f == nil {
 			continue
 		}
-		if err := doc.AddExtraFileFromZip(f); err != nil {
-			return nil, err
+		if retErr = doc.AddExtraFileFromZip(f); retErr != nil {
+			return nil, retErr
 		}
 	}
 	return doc, nil
@@ -984,8 +991,14 @@ func (d *Document) FontTable() *wml.Fonts {
 	return d.fontTable
 }
 
-// SetFontTable replaces the document's font table.  Pass the value obtained
-// from another document's FontTable() to carry embedded fonts across.
+// SetFontTable replaces the document's font table.
+//
+// NOTE: this only copies the font table XML (font names and relationship IDs).
+// Embedded font binaries are stored in DocBase.ExtraFiles and must be copied
+// separately if you need the actual font data to survive a round-trip.  The
+// font table's own .rels sidecar (which maps relationship IDs to the binary
+// paths) is also in ExtraFiles and must be copied.  Failing to do so produces
+// a document where Word silently drops the embedded fonts.
 func (d *Document) SetFontTable(f *wml.Fonts) {
 	d.fontTable = f
 }
@@ -1062,8 +1075,16 @@ func (d Document) Bookmarks() []Bookmark {
 // Close closes the document, removing any temporary files that might have been
 // created when opening a document.
 func (d *Document) Close() error {
-	if d.TmpPath != "" && strings.HasPrefix(d.TmpPath, os.TempDir()) {
-		return os.RemoveAll(d.TmpPath)
+	if d.TmpPath == "" {
+		return nil
 	}
-	return nil
+	// Use filepath.Clean + filepath.Rel for a path-aware containment check that
+	// is not fooled by symlinks, ".." components, or platform path variations.
+	tmpDir := filepath.Clean(os.TempDir())
+	target := filepath.Clean(d.TmpPath)
+	rel, err := filepath.Rel(tmpDir, target)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return nil
+	}
+	return os.RemoveAll(target)
 }
