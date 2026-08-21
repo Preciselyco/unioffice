@@ -122,7 +122,26 @@ func (s StructuredDocumentTag) AddParagraph() Paragraph {
 	}
 	p := wml.NewCT_P()
 	s.x.SdtContent.P = append(s.x.SdtContent.P, p)
+	s.x.SdtContent.ContentOrder = append(s.x.SdtContent.ContentOrder, wml.CT_SdtContentBlockEltP)
 	return Paragraph{s.d, p}
+}
+
+// AddTable adds a new table inside the structured document tag's content,
+// after any content already added. This is a block-level operation: a
+// run-level (inline) control holds runs rather than tables, so calling
+// AddTable on one is unsupported and returns a zero Table rather than
+// panicking.
+func (s StructuredDocumentTag) AddTable() Table {
+	if s.x == nil {
+		return Table{}
+	}
+	if s.x.SdtContent == nil {
+		s.x.SdtContent = wml.NewCT_SdtContentBlock()
+	}
+	tbl := wml.NewCT_Tbl()
+	s.x.SdtContent.Tbl = append(s.x.SdtContent.Tbl, tbl)
+	s.x.SdtContent.ContentOrder = append(s.x.SdtContent.ContentOrder, wml.CT_SdtContentBlockEltTbl)
+	return Table{s.d, tbl}
 }
 
 // Paragraphs returns the paragraphs within a structured document tag. A
@@ -134,6 +153,19 @@ func (s StructuredDocumentTag) Paragraphs() []Paragraph {
 	ret := []Paragraph{}
 	for _, p := range s.x.SdtContent.P {
 		ret = append(ret, Paragraph{s.d, p})
+	}
+	return ret
+}
+
+// Tables returns the tables within a structured document tag. A run-level
+// (inline) control has no tables of its own and returns nil.
+func (s StructuredDocumentTag) Tables() []Table {
+	if s.x == nil || s.x.SdtContent == nil {
+		return nil
+	}
+	ret := []Table{}
+	for _, tbl := range s.x.SdtContent.Tbl {
+		ret = append(ret, Table{s.d, tbl})
 	}
 	return ret
 }

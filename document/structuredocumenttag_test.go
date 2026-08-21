@@ -8,7 +8,10 @@
 package document_test
 
 import (
+	"archive/zip"
 	"bytes"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/Preciselyco/unioffice/document"
@@ -149,6 +152,109 @@ func TestSDTRoundTrip(t *testing.T) {
 	if runs[0].Text() != "round-trip text" {
 		t.Errorf("after round-trip: expected text 'round-trip text', got %q", runs[0].Text())
 	}
+}
+
+// TestSDTAddTable verifies that AddTable adds a table to an SDT's content
+// and that it's enumerable via Tables().
+func TestSDTAddTable(t *testing.T) {
+	doc := document.New()
+
+	sdt := doc.AddStructuredDocumentTag()
+	sdt.SetTag("clause-with-table")
+
+	table := sdt.AddTable()
+	row := table.AddRow()
+	row.AddCell().AddParagraph().AddRun().AddText("cell text")
+
+	sdts := doc.StructuredDocumentTags()
+	if len(sdts) != 1 {
+		t.Fatalf("expected 1 SDT, got %d", len(sdts))
+	}
+
+	tables := sdts[0].Tables()
+	if len(tables) != 1 {
+		t.Fatalf("expected 1 table inside SDT, got %d", len(tables))
+	}
+	rows := tables[0].Rows()
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(rows))
+	}
+}
+
+// TestSDTParagraphsAndTablesInterleave verifies that AddParagraph and
+// AddTable calls on an SDT preserve their call order when the document is
+// serialized: a clause body with a paragraph, then a table, then another
+// paragraph must round-trip in that exact order, not all paragraphs before
+// the table.
+func TestSDTParagraphsAndTablesInterleave(t *testing.T) {
+	doc := document.New()
+
+	sdt := doc.AddStructuredDocumentTag()
+	sdt.SetTag("interleaved-clause")
+
+	sdt.AddParagraph().AddRun().AddText("before")
+	table := sdt.AddTable()
+	table.AddRow().AddCell().AddParagraph().AddRun().AddText("in table")
+	sdt.AddParagraph().AddRun().AddText("after")
+
+	buf := bytes.Buffer{}
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save failed: %s", err)
+	}
+
+	body := extractDocumentXMLBody(t, buf.Bytes())
+
+	beforeIdx := strings.Index(body, "before")
+	tblIdx := strings.Index(body, "<w:tbl")
+	afterIdx := strings.Index(body, "after")
+	if beforeIdx == -1 || tblIdx == -1 || afterIdx == -1 {
+		t.Fatalf("expected 'before', a table, and 'after' all present in document.xml, got: %s", body)
+	}
+	if !(beforeIdx < tblIdx && tblIdx < afterIdx) {
+		t.Errorf("expected document order before < table < after, got indices %d, %d, %d", beforeIdx, tblIdx, afterIdx)
+	}
+
+	// And it should read back correctly too.
+	doc2, err := document.ReadFromBytes(buf.Bytes())
+	if err != nil {
+		t.Fatalf("ReadFromBytes failed: %s", err)
+	}
+	sdts := doc2.StructuredDocumentTags()
+	if len(sdts) != 1 {
+		t.Fatalf("after round-trip: expected 1 SDT, got %d", len(sdts))
+	}
+	if len(sdts[0].Paragraphs()) != 2 {
+		t.Errorf("after round-trip: expected 2 paragraphs, got %d", len(sdts[0].Paragraphs()))
+	}
+	if len(sdts[0].Tables()) != 1 {
+		t.Errorf("after round-trip: expected 1 table, got %d", len(sdts[0].Tables()))
+	}
+}
+
+// extractDocumentXMLBody reads word/document.xml out of a saved docx zip.
+func extractDocumentXMLBody(t *testing.T, docxBytes []byte) string {
+	t.Helper()
+	zr, err := zip.NewReader(bytes.NewReader(docxBytes), int64(len(docxBytes)))
+	if err != nil {
+		t.Fatalf("opening docx as zip failed: %s", err)
+	}
+	for _, f := range zr.File {
+		if f.Name != "word/document.xml" {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			t.Fatalf("opening word/document.xml failed: %s", err)
+		}
+		defer rc.Close()
+		b, err := io.ReadAll(rc)
+		if err != nil {
+			t.Fatalf("reading word/document.xml failed: %s", err)
+		}
+		return string(b)
+	}
+	t.Fatal("word/document.xml not found in docx")
+	return ""
 }
 
 // TestSDTNoLock verifies that AddStructuredDocumentTag does not set a lock

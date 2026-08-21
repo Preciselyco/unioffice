@@ -27,7 +27,26 @@ type CT_SdtContentBlock struct {
 	// Table
 	Tbl             []*CT_Tbl
 	EG_RunLevelElts []*EG_RunLevelElts
+	// ContentOrder records the interleaving of P and Tbl elements in original
+	// document order: entry i identifies which of P/Tbl the i-th such element
+	// (in document order) came from. UnmarshalXML populates it automatically;
+	// callers building content programmatically (e.g.
+	// StructuredDocumentTag.AddParagraph/AddTable) append to it to preserve
+	// order on write. MarshalXML only honors it when
+	// len(ContentOrder) == len(P)+len(Tbl); otherwise it falls back to writing
+	// all P before all Tbl, so existing code that appends to P/Tbl directly
+	// without maintaining ContentOrder keeps working unchanged.
+	ContentOrder []CT_SdtContentBlockEltKind
 }
+
+// CT_SdtContentBlockEltKind identifies which slice (P or Tbl) a position in
+// CT_SdtContentBlock.ContentOrder refers to.
+type CT_SdtContentBlockEltKind int
+
+const (
+	CT_SdtContentBlockEltP CT_SdtContentBlockEltKind = iota
+	CT_SdtContentBlockEltTbl
+)
 
 func NewCT_SdtContentBlock() *CT_SdtContentBlock {
 	ret := &CT_SdtContentBlock{}
@@ -44,16 +63,32 @@ func (m *CT_SdtContentBlock) MarshalXML(e *xml.Encoder, start xml.StartElement) 
 		sesdt := xml.StartElement{Name: xml.Name{Local: "w:sdt"}}
 		e.EncodeElement(m.Sdt, sesdt)
 	}
-	if m.P != nil {
+	if len(m.ContentOrder) == len(m.P)+len(m.Tbl) {
 		sep := xml.StartElement{Name: xml.Name{Local: "w:p"}}
-		for _, c := range m.P {
-			e.EncodeElement(c, sep)
-		}
-	}
-	if m.Tbl != nil {
 		setbl := xml.StartElement{Name: xml.Name{Local: "w:tbl"}}
-		for _, c := range m.Tbl {
-			e.EncodeElement(c, setbl)
+		pIdx, tblIdx := 0, 0
+		for _, kind := range m.ContentOrder {
+			switch kind {
+			case CT_SdtContentBlockEltTbl:
+				e.EncodeElement(m.Tbl[tblIdx], setbl)
+				tblIdx++
+			default:
+				e.EncodeElement(m.P[pIdx], sep)
+				pIdx++
+			}
+		}
+	} else {
+		if m.P != nil {
+			sep := xml.StartElement{Name: xml.Name{Local: "w:p"}}
+			for _, c := range m.P {
+				e.EncodeElement(c, sep)
+			}
+		}
+		if m.Tbl != nil {
+			setbl := xml.StartElement{Name: xml.Name{Local: "w:tbl"}}
+			for _, c := range m.Tbl {
+				e.EncodeElement(c, setbl)
+			}
 		}
 	}
 	if m.EG_RunLevelElts != nil {
@@ -95,6 +130,7 @@ lCT_SdtContentBlock:
 					return err
 				}
 				m.P = append(m.P, tmp)
+				m.ContentOrder = append(m.ContentOrder, CT_SdtContentBlockEltP)
 			case xml.Name{Space: "http://schemas.openxmlformats.org/wordprocessingml/2006/main", Local: "tbl"},
 				xml.Name{Space: "http://purl.oclc.org/ooxml/wordprocessingml/main", Local: "tbl"}:
 				tmp := NewCT_Tbl()
@@ -102,6 +138,7 @@ lCT_SdtContentBlock:
 					return err
 				}
 				m.Tbl = append(m.Tbl, tmp)
+				m.ContentOrder = append(m.ContentOrder, CT_SdtContentBlockEltTbl)
 			case xml.Name{Space: "http://schemas.openxmlformats.org/wordprocessingml/2006/main", Local: "proofErr"},
 				xml.Name{Space: "http://purl.oclc.org/ooxml/wordprocessingml/main", Local: "proofErr"}:
 				tmprunlevelelts := NewEG_RunLevelElts()
