@@ -134,6 +134,82 @@ func TestClearFootnotesDropsThePart(t *testing.T) {
 	}
 }
 
+// TestClearEndnotesDropsThePart is TestClearFootnotesDropsThePart's endnote
+// twin.
+func TestClearEndnotesDropsThePart(t *testing.T) {
+	doc := document.New()
+	ens := doc.EnsureEndnotes()
+	en := ens.AddEndnote()
+	en.AddParagraph().AddRun().AddText("stale")
+
+	doc.ClearEndnotes()
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	if _, ok := zipEntry(t, buf.Bytes(), "word/endnotes.xml"); ok {
+		t.Error("word/endnotes.xml present after ClearEndnotes")
+	}
+}
+
+// TestFootnotesNonEmpty covers both false branches of Footnotes.NonEmpty():
+// a nil-wrapping Footnotes (no part yet), and a part that holds only the
+// mandatory separator marks.
+func TestFootnotesNonEmpty(t *testing.T) {
+	doc := document.New()
+	if doc.Footnotes().NonEmpty() {
+		t.Error("NonEmpty() true with no footnotes part at all")
+	}
+
+	fns := doc.EnsureFootnotes()
+	if fns.NonEmpty() {
+		t.Error("NonEmpty() true with only separator marks and no real footnote")
+	}
+
+	fns.AddFootnote()
+	if !fns.NonEmpty() {
+		t.Error("NonEmpty() false after adding a real footnote")
+	}
+}
+
+// TestEndnotesNonEmpty is TestFootnotesNonEmpty's endnote twin.
+func TestEndnotesNonEmpty(t *testing.T) {
+	doc := document.New()
+	if doc.Endnotes().NonEmpty() {
+		t.Error("NonEmpty() true with no endnotes part at all")
+	}
+
+	ens := doc.EnsureEndnotes()
+	if ens.NonEmpty() {
+		t.Error("NonEmpty() true with only separator marks and no real endnote")
+	}
+
+	ens.AddEndnote()
+	if !ens.NonEmpty() {
+		t.Error("NonEmpty() false after adding a real endnote")
+	}
+}
+
+// TestFootnoteAndEndnoteX asserts the X() accessors on Footnotes, Endnotes,
+// and Footnote return the expected non-nil wrapped XML types.
+func TestFootnoteAndEndnoteX(t *testing.T) {
+	doc := document.New()
+	fns := doc.EnsureFootnotes()
+	if fns.X() == nil {
+		t.Error("Footnotes.X() is nil after EnsureFootnotes")
+	}
+	fn := fns.AddFootnote()
+	if fn.X() == nil {
+		t.Error("Footnote.X() is nil after AddFootnote")
+	}
+
+	ens := doc.EnsureEndnotes()
+	if ens.X() == nil {
+		t.Error("Endnotes.X() is nil after EnsureEndnotes")
+	}
+}
+
 // TestFootnoteIDsAvoidSeparatorSlots asserts AddFootnote allocates ids
 // starting at 1, never colliding with the reserved separator ids (-1, 0).
 func TestFootnoteIDsAvoidSeparatorSlots(t *testing.T) {
@@ -213,6 +289,84 @@ func TestEndnotesAddEndnoteWithoutEnsureLazilyCreatesPart(t *testing.T) {
 	}
 }
 
+// TestReadFootnotesRoundTrip asserts that a document written with a real
+// (non-separator) footnote can be read back via ReadFromBytes and that the
+// footnotes part — including its actual content, not just the separator
+// marks — survives the read/decode path (Document.onNewRelationship's
+// FootNotesType case) intact.
+func TestReadFootnotesRoundTrip(t *testing.T) {
+	doc := document.New()
+	fn := doc.EnsureFootnotes().AddFootnote()
+	fn.AddParagraph().AddRun().AddText("roundtrip footnote text")
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	doc2, err := document.ReadFromBytes(buf.Bytes())
+	if err != nil {
+		t.Fatalf("ReadFromBytes: %v", err)
+	}
+	defer func() { _ = doc2.Close() }()
+
+	if !doc2.Footnotes().NonEmpty() {
+		t.Fatal("read-back document reports no footnotes")
+	}
+
+	var buf2 bytes.Buffer
+	if err := doc2.Save(&buf2); err != nil {
+		t.Fatalf("Save (re-save): %v", err)
+	}
+	partXML, ok := zipEntry(t, buf2.Bytes(), "word/footnotes.xml")
+	if !ok {
+		t.Fatal("word/footnotes.xml missing after read/re-save round trip")
+	}
+	if !bytes.Contains([]byte(partXML), []byte("roundtrip footnote text")) {
+		t.Errorf("footnote text lost across read/re-save round trip:\n%s", partXML)
+	}
+	if !bytes.Contains([]byte(partXML), []byte(`w:id="1"`)) {
+		t.Errorf("footnote id lost across read/re-save round trip:\n%s", partXML)
+	}
+}
+
+// TestReadEndnotesRoundTrip is TestReadFootnotesRoundTrip's endnote twin.
+func TestReadEndnotesRoundTrip(t *testing.T) {
+	doc := document.New()
+	en := doc.EnsureEndnotes().AddEndnote()
+	en.AddParagraph().AddRun().AddText("roundtrip endnote text")
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	doc2, err := document.ReadFromBytes(buf.Bytes())
+	if err != nil {
+		t.Fatalf("ReadFromBytes: %v", err)
+	}
+	defer func() { _ = doc2.Close() }()
+
+	if !doc2.Endnotes().NonEmpty() {
+		t.Fatal("read-back document reports no endnotes")
+	}
+
+	var buf2 bytes.Buffer
+	if err := doc2.Save(&buf2); err != nil {
+		t.Fatalf("Save (re-save): %v", err)
+	}
+	partXML, ok := zipEntry(t, buf2.Bytes(), "word/endnotes.xml")
+	if !ok {
+		t.Fatal("word/endnotes.xml missing after read/re-save round trip")
+	}
+	if !bytes.Contains([]byte(partXML), []byte("roundtrip endnote text")) {
+		t.Errorf("endnote text lost across read/re-save round trip:\n%s", partXML)
+	}
+	if !bytes.Contains([]byte(partXML), []byte(`w:id="1"`)) {
+		t.Errorf("endnote id lost across read/re-save round trip:\n%s", partXML)
+	}
+}
+
 // TestAddEndnoteReferenceWritesEndnoteReference is AddFootnoteReference's
 // endnote-side round-trip check (see TestEnsureFootnotesProducesValidPart) —
 // exercises Run.AddEndnoteReference, which had no direct test coverage.
@@ -220,7 +374,9 @@ func TestAddEndnoteReferenceWritesEndnoteReference(t *testing.T) {
 	doc := document.New()
 	ens := doc.EnsureEndnotes()
 	en := ens.AddEndnote()
-	en.AddParagraph().AddRun().AddText("end note body")
+	body := en.AddParagraph()
+	body.AddRun().AddEndnoteRef()
+	body.AddRun().AddText(" end note body")
 
 	p := doc.AddParagraph()
 	p.AddRun().AddEndnoteReference(en)
@@ -233,5 +389,10 @@ func TestAddEndnoteReferenceWritesEndnoteReference(t *testing.T) {
 	docXML, _ := zipEntry(t, buf.Bytes(), "word/document.xml")
 	if !bytes.Contains([]byte(docXML), []byte(`w:endnoteReference w:id="1"`)) {
 		t.Errorf("document.xml missing the endnote reference:\n%s", docXML)
+	}
+
+	partXML, _ := zipEntry(t, buf.Bytes(), "word/endnotes.xml")
+	if !bytes.Contains([]byte(partXML), []byte(`<w:endnoteRef`)) {
+		t.Errorf("endnotes.xml missing the w:endnoteRef auto-number placeholder:\n%s", partXML)
 	}
 }
