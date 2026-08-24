@@ -94,6 +94,43 @@ func (r Run) AddAnnotationReference() {
 	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
 }
 
+// AddFootnoteReference marks this run as the reference point for the given
+// footnote (a Footnote from Document.EnsureFootnotes().AddFootnote()). The
+// run's own text/formatting is independent — callers typically want the run
+// empty and its properties set to superscript via
+// r.Properties().SetVerticalAlignment(sharedTypes.ST_VerticalAlignRunSuperscript).
+func (r Run) AddFootnoteReference(f Footnote) {
+	ric := wml.NewEG_RunInnerContent()
+	ref := wml.NewCT_FtnEdnRef()
+	ref.IdAttr = f.ID()
+	ric.FootnoteReference = ref
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+}
+
+// AddEndnoteReference is AddFootnoteReference's endnote twin.
+func (r Run) AddEndnoteReference(f Footnote) {
+	ric := wml.NewEG_RunInnerContent()
+	ref := wml.NewCT_FtnEdnRef()
+	ref.IdAttr = f.ID()
+	ric.EndnoteReference = ref
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+}
+
+// AddFootnoteRef adds the w:footnoteRef auto-number placeholder Word expects
+// as the first run in a footnote body paragraph.
+func (r Run) AddFootnoteRef() {
+	ric := wml.NewEG_RunInnerContent()
+	ric.FootnoteRef = wml.NewCT_Empty()
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+}
+
+// AddEndnoteRef is AddFootnoteRef's endnote twin (w:endnoteRef).
+func (r Run) AddEndnoteRef() {
+	ric := wml.NewEG_RunInnerContent()
+	ric.EndnoteRef = wml.NewCT_Empty()
+	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ric)
+}
+
 func (r Run) newIC() *wml.EG_RunInnerContent {
 	ic := wml.NewEG_RunInnerContent()
 	r.x.EG_RunInnerContent = append(r.x.EG_RunInnerContent, ic)
