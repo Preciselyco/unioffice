@@ -44,8 +44,13 @@ func (e Endnotes) NonEmpty() bool {
 }
 
 // AddEndnote appends a new, empty endnote with the next free id and returns
-// it. Callers add paragraphs to the returned Footnote via AddParagraph.
+// it. Callers add paragraphs to the returned Footnote via AddParagraph. If e
+// wraps no endnotes part yet (e.g. obtained via Document.Endnotes() rather
+// than EnsureEndnotes()), one is created and registered on the document.
 func (e Endnotes) AddEndnote() Footnote {
+	if e.x == nil {
+		e = e.d.EnsureEndnotes()
+	}
 	ex := wml.NewCT_FtnEdn()
 	ex.IdAttr = nextFtnEdnID(e.x.Endnote)
 	e.x.Endnote = append(e.x.Endnote, ex)

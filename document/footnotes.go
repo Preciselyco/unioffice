@@ -55,8 +55,13 @@ func isContentFootnote(fn *wml.CT_FtnEdn) bool {
 }
 
 // AddFootnote appends a new, empty footnote with the next free id and returns
-// it. Callers add paragraphs to the returned Footnote via AddParagraph.
+// it. Callers add paragraphs to the returned Footnote via AddParagraph. If f
+// wraps no footnotes part yet (e.g. obtained via Document.Footnotes() rather
+// than EnsureFootnotes()), one is created and registered on the document.
 func (f Footnotes) AddFootnote() Footnote {
+	if f.x == nil {
+		f = f.d.EnsureFootnotes()
+	}
 	fx := wml.NewCT_FtnEdn()
 	fx.IdAttr = nextFtnEdnID(f.x.Footnote)
 	f.x.Footnote = append(f.x.Footnote, fx)

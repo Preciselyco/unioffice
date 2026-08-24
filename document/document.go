@@ -217,6 +217,10 @@ func (d *Document) Save(w io.Writer) error {
 	// conditionally-present part above. Without this the part written
 	// unconditionally-if-non-nil further down in Save would have no content
 	// type override and no relationship — an orphan part Word refuses to open.
+	// Gating on NonEmpty() instead of != nil would drop the part for real Word
+	// documents whose footnotes.xml holds only the mandatory separator marks
+	// (no real footnotes) — Word writes that part unconditionally and expects
+	// it preserved on round-trip, unlike Comments/CommentsExtended.
 	if d.footNotes != nil {
 		d.ContentTypes.SetOverride("/word/footnotes.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml")
 	} else {

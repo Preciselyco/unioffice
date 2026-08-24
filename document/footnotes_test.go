@@ -32,7 +32,7 @@ func zipEntry(t *testing.T, docx []byte, name string) (string, bool) {
 		if err != nil {
 			t.Fatalf("open %s: %v", name, err)
 		}
-		defer rc.Close()
+		defer func() { _ = rc.Close() }()
 		data, err := io.ReadAll(rc)
 		if err != nil {
 			t.Fatalf("read %s: %v", name, err)
@@ -166,5 +166,72 @@ func TestEndnotesSymmetric(t *testing.T) {
 	}
 	if _, ok := zipEntry(t, buf.Bytes(), "word/endnotes.xml"); !ok {
 		t.Error("word/endnotes.xml missing after EnsureEndnotes+AddEndnote")
+	}
+}
+
+// TestFootnotesAddFootnoteWithoutEnsureLazilyCreatesPart asserts that calling
+// AddFootnote() via Document.Footnotes() — which wraps nil when the document
+// has no footnotes part yet, rather than via EnsureFootnotes() — does not
+// panic, and instead lazily creates and registers the part.
+func TestFootnotesAddFootnoteWithoutEnsureLazilyCreatesPart(t *testing.T) {
+	doc := document.New()
+	fn := doc.Footnotes().AddFootnote()
+	if fn.ID() != 1 {
+		t.Errorf("footnote id = %d, want 1", fn.ID())
+	}
+	if !doc.Footnotes().NonEmpty() {
+		t.Error("document footnotes should be non-empty after lazy AddFootnote")
+	}
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	if _, ok := zipEntry(t, buf.Bytes(), "word/footnotes.xml"); !ok {
+		t.Error("word/footnotes.xml missing after lazy AddFootnote")
+	}
+}
+
+// TestEndnotesAddEndnoteWithoutEnsureLazilyCreatesPart is
+// TestFootnotesAddFootnoteWithoutEnsureLazilyCreatesPart's endnote twin.
+func TestEndnotesAddEndnoteWithoutEnsureLazilyCreatesPart(t *testing.T) {
+	doc := document.New()
+	en := doc.Endnotes().AddEndnote()
+	if en.ID() != 1 {
+		t.Errorf("endnote id = %d, want 1", en.ID())
+	}
+	if !doc.Endnotes().NonEmpty() {
+		t.Error("document endnotes should be non-empty after lazy AddEndnote")
+	}
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	if _, ok := zipEntry(t, buf.Bytes(), "word/endnotes.xml"); !ok {
+		t.Error("word/endnotes.xml missing after lazy AddEndnote")
+	}
+}
+
+// TestAddEndnoteReferenceWritesEndnoteReference is AddFootnoteReference's
+// endnote-side round-trip check (see TestEnsureFootnotesProducesValidPart) —
+// exercises Run.AddEndnoteReference, which had no direct test coverage.
+func TestAddEndnoteReferenceWritesEndnoteReference(t *testing.T) {
+	doc := document.New()
+	ens := doc.EnsureEndnotes()
+	en := ens.AddEndnote()
+	en.AddParagraph().AddRun().AddText("end note body")
+
+	p := doc.AddParagraph()
+	p.AddRun().AddEndnoteReference(en)
+
+	var buf bytes.Buffer
+	if err := doc.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	docXML, _ := zipEntry(t, buf.Bytes(), "word/document.xml")
+	if !bytes.Contains([]byte(docXML), []byte(`w:endnoteReference w:id="1"`)) {
+		t.Errorf("document.xml missing the endnote reference:\n%s", docXML)
 	}
 }
