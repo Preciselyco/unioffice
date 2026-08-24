@@ -100,6 +100,54 @@ func (d *Document) AddHeader() Header {
 	return Header{d, hdr}
 }
 
+// Footnotes returns the document's footnotes part, or a Footnotes wrapping
+// nil if the document has none yet — call EnsureFootnotes() first to write
+// to it.
+func (d *Document) Footnotes() Footnotes {
+	return newFootnotes(d, d.footNotes)
+}
+
+// EnsureFootnotes returns the document's footnotes part, creating and
+// registering it (seeded with the mandatory separator marks) if the document
+// doesn't have one yet. Idempotent — safe to call on a document that already
+// has footnotes, whether built via this method or read from a file.
+func (d *Document) EnsureFootnotes() Footnotes {
+	if d.footNotes == nil {
+		d.footNotes = wml.NewFootnotes()
+		seedSeparators(&d.footNotes.CT_Footnotes)
+	}
+	return newFootnotes(d, d.footNotes)
+}
+
+// ClearFootnotes resets the document to no footnotes at all — the part is
+// dropped entirely (not merely emptied) on the next Save. Compose reuses the
+// uploaded DOCX as its export template; without this, footnotes left over
+// from that source file would be re-emitted as stale orphans alongside
+// whatever new footnotes the current export adds.
+func (d *Document) ClearFootnotes() {
+	d.footNotes = nil
+}
+
+// Endnotes returns the document's endnotes part, or an Endnotes wrapping nil
+// if the document has none yet — call EnsureEndnotes() first to write to it.
+func (d *Document) Endnotes() Endnotes {
+	return newEndnotes(d, d.endNotes)
+}
+
+// EnsureEndnotes is EnsureFootnotes's endnote twin.
+func (d *Document) EnsureEndnotes() Endnotes {
+	if d.endNotes == nil {
+		d.endNotes = wml.NewEndnotes()
+		seedEndnoteSeparators(&d.endNotes.CT_Endnotes)
+	}
+	return newEndnotes(d, d.endNotes)
+}
+
+// ClearEndnotes is ClearFootnotes's endnote twin.
+func (d *Document) ClearEndnotes() {
+	d.endNotes = nil
+}
+
 // Headers returns the headers defined in the document.
 func (d *Document) Headers() []Header {
 	ret := []Header{}
@@ -163,6 +211,22 @@ func (d *Document) Save(w io.Writer) error {
 	} else {
 		d.ContentTypes.RemoveOverride("/word/commentsExtended.xml")
 	}
+	// d.footNotes/d.endNotes are allocated lazily by EnsureFootnotes/
+	// EnsureEndnotes (or by reading a file that already had the part); a
+	// document with neither has both nil, matching every other
+	// conditionally-present part above. Without this the part written
+	// unconditionally-if-non-nil further down in Save would have no content
+	// type override and no relationship — an orphan part Word refuses to open.
+	if d.footNotes != nil {
+		d.ContentTypes.SetOverride("/word/footnotes.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml")
+	} else {
+		d.ContentTypes.RemoveOverride("/word/footnotes.xml")
+	}
+	if d.endNotes != nil {
+		d.ContentTypes.SetOverride("/word/endnotes.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml")
+	} else {
+		d.ContentTypes.RemoveOverride("/word/endnotes.xml")
+	}
 	d.Rels.SetRelationship(unioffice.RelativeFilename(unioffice.DocTypeDocument, "", unioffice.CorePropertiesType, 0), unioffice.CorePropertiesType)
 	d.Rels.SetRelationship("docProps/app.xml", unioffice.ExtendedPropertiesType)
 	d.Rels.SetRelationship("word/document.xml", unioffice.OfficeDocumentType)
@@ -185,6 +249,16 @@ func (d *Document) Save(w io.Writer) error {
 		d.docRels.SetRelationship("commentsExtended.xml", unioffice.CommentsExtendedType)
 	} else {
 		d.docRels.RemoveRelationship("commentsExtended.xml")
+	}
+	if d.footNotes != nil {
+		d.docRels.SetRelationship("footnotes.xml", unioffice.FootNotesType)
+	} else {
+		d.docRels.RemoveRelationship("footnotes.xml")
+	}
+	if d.endNotes != nil {
+		d.docRels.SetRelationship("endnotes.xml", unioffice.EndNotesType)
+	} else {
+		d.docRels.RemoveRelationship("endnotes.xml")
 	}
 
 	dt := unioffice.DocTypeDocument
