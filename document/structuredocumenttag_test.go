@@ -246,7 +246,7 @@ func extractDocumentXMLBody(t *testing.T, docxBytes []byte) string {
 		if err != nil {
 			t.Fatalf("opening word/document.xml failed: %s", err)
 		}
-		defer rc.Close()
+		defer func() { _ = rc.Close() }()
 		b, err := io.ReadAll(rc)
 		if err != nil {
 			t.Fatalf("reading word/document.xml failed: %s", err)
