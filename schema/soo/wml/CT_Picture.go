@@ -16,6 +16,10 @@ import (
 )
 
 type CT_Picture struct {
+	// VML (urn:schemas-microsoft-com:vml) and Office
+	// (urn:schemas-microsoft-com:office:office) content, allowed by the
+	// xsd:any wildcards of the Transitional schema.
+	Extra []unioffice.Any
 	// Embedded Video
 	Movie *CT_Rel
 	// Floating Embedded Control
@@ -29,6 +33,11 @@ func NewCT_Picture() *CT_Picture {
 
 func (m *CT_Picture) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	e.EncodeToken(start)
+	for _, any := range m.Extra {
+		if err := any.MarshalXML(e, xml.StartElement{}); err != nil {
+			return err
+		}
+	}
 	if m.Movie != nil {
 		semovie := xml.StartElement{Name: xml.Name{Local: "w:movie"}}
 		e.EncodeElement(m.Movie, semovie)
@@ -65,10 +74,11 @@ lCT_Picture:
 					return err
 				}
 			default:
-				unioffice.Log("skipping unsupported element on CT_Picture %v", el.Name)
-				if err := d.Skip(); err != nil {
+				any := &unioffice.XSDAny{}
+				if err := d.DecodeElement(any, &el); err != nil {
 					return err
 				}
+				m.Extra = append(m.Extra, any)
 			}
 		case xml.EndElement:
 			break lCT_Picture
