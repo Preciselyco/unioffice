@@ -42,11 +42,11 @@ jobs:
           args: --timeout=5m
 
   # Once the tests pass on master, tag and release the next patch version
-  # (buildpipeline's go-library-release.yml), so services require real
+  # (go-library-release.yml, a copy of buildpipeline's), so services require real
   # versions and Renovate offers version bumps instead of commit-hash updates.
   release:
     needs: [test, lint]
     if: github.event_name == 'push'
     permissions:
       contents: write
-    uses: Preciselyco/buildpipeline/.github/workflows/go-library-release.yml@main
+    uses: ./.github/workflows/go-library-release.yml
